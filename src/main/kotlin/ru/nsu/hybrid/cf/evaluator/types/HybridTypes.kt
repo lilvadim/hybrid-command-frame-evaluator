@@ -25,8 +25,7 @@ data class CommandDescriptor(
 data class CommandOption(
     val option: String,
     val index: Int?,
-    @JsonRawValue
-    val value: String?,
+    @JsonRawValue val value: String?,
 )
 
 data class UpdateOptionsParameters(

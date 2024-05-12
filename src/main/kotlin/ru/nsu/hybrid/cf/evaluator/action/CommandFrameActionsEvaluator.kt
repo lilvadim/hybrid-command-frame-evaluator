@@ -31,8 +31,8 @@ class CommandFrameActionsEvaluator(
         for (optionSet in semantics.flattenOptionSets) {
             for (option in optionSet) {
                 val optionSemantics = semantics.optionSemantics(option.references().first())
-                val (handler, script) = handler(semantics, optionSemantics, option)
-                scriptContext += script
+                val (handler, handlerDef) = handler(semantics, optionSemantics, option)
+                scriptContext += handlerDef
                 actionMap[ActionDescriptor(htmlId(option))] = "$handler()"
             }
         }
