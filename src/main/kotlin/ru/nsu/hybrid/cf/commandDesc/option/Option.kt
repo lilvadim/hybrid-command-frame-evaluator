@@ -1,6 +1,6 @@
 package ru.nsu.hybrid.cf.commandDesc.option
 
-import ru.nsu.hybrid.cf.commandDesc.SideEffect
+import ru.nsu.hybrid.cf.commandDesc.option.effect.SideEffect
 
 class Option(
     val optionVariants: Set<OptionExpr>,

@@ -12,9 +12,9 @@ import ru.nsu.hybrid.cf.evaluator.action.ActionDescriptor
 import ru.nsu.hybrid.cf.evaluator.action.CommandFrameActionsEvaluator
 
 class CommandFrameEvaluator(
-    val actionsEvaluator: CommandFrameActionsEvaluator = CommandFrameActionsEvaluator()
+    private val actionsEvaluator: CommandFrameActionsEvaluator = CommandFrameActionsEvaluator()
 ) {
-    val actionMap = mutableMapOf<ActionDescriptor, String>()
+    private val actionMap = mutableMapOf<ActionDescriptor, String>()
 
     fun evaluate(command: Command): Document {
         val scriptContext = when (command) {
@@ -43,7 +43,7 @@ class CommandFrameEvaluator(
         }
     }
 
-    fun FlowContent.evaluate(complexCommand: ComplexCommand) {
+    private fun FlowContent.evaluate(complexCommand: ComplexCommand) {
         div("container") {
             id = htmlId(complexCommand)
             h2("mono-font-bold") { +complexCommand.name }
@@ -69,7 +69,7 @@ class CommandFrameEvaluator(
         }
     }
 
-    fun FlowContent.evaluate(simpleCommand: SimpleCommand) {
+    private fun FlowContent.evaluate(simpleCommand: SimpleCommand) {
         div {
             h2("mono-font-bold") { +simpleCommand.name }
             simpleCommand.options?.forEach { optionSet -> div("list-group-item") { evaluate(optionSet) } }
@@ -77,20 +77,18 @@ class CommandFrameEvaluator(
         }
     }
 
-    fun FlowContent.evaluate(subEntry: SubEntry) {
+    private fun FlowContent.evaluate(subEntry: SubEntry) {
         when (subEntry) {
             is InlineEntry -> evaluate(subEntry)
             is TabEntry -> evaluate(subEntry)
         }
     }
 
-    fun FlowContent.evaluate(entry: TabEntry) {
-        button(classes = "nav-link") {
-
-        }
+    private fun FlowContent.evaluate(entry: TabEntry) {
+        TODO()
     }
 
-    fun FlowContent.evaluate(entry: InlineEntry) {
+    private fun FlowContent.evaluate(entry: InlineEntry) {
         div {
             h3 { +entry.name }
             div("list-group list-group-flush") {
@@ -100,56 +98,106 @@ class CommandFrameEvaluator(
         }
     }
 
-    fun FlowContent.evaluate(optionSet: OptionSet) {
+    private fun FlowContent.evaluate(optionSet: OptionSet) {
         when (optionSet) {
             is ToggleOptionSet -> evaluate(optionSet)
             is ChoiceOptionSet -> evaluate(optionSet)
         }
     }
 
-    fun FlowContent.evaluate(optionSet: ToggleOptionSet) {
+    private fun FlowContent.evaluate(optionSet: ToggleOptionSet) {
         div("list-group") {
             optionSet.forEach { option ->
                 div("list-group-item") {
-                    div("form-check") {
-                        label("form-check-label mono-font-bold") {
-                            +htmlLabel(option)
-                            input(InputType.checkBox, classes = "form-check-input") {
-                                value = ""
-                            }
-                            onClick = actionMap[ActionDescriptor(htmlId(option))] ?: ""
-                        }
-                    }
+                    evaluate(option, optionSet)
                     option.description?.let { text(it) }
                 }
             }
         }
     }
 
-    fun FlowContent.evaluate(optionSet: ChoiceOptionSet) {
-        div("list-group") {
-            optionSet.forEach { option ->
-                div("list-group-item") {
+    private fun FlowContent.evaluate(option: Option, optionSet: OptionSet) {
+        when {
+            option.hasValue && option.values.isNullOrEmpty() -> div("input-group") {
+                div("input-group-text") {
                     div("form-check") {
                         label("form-check-label mono-font-bold") {
-                            htmlFor = htmlId(option)
                             +htmlLabel(option)
-                            input(
-                                InputType.radio,
-                                classes = "form-check-input",
+                            input(inputType(optionSet), classes = "form-check-input") {
                                 name = htmlId(optionSet)
-                            ) {
+                                id = htmlId(option)
                                 value = ""
                             }
+                            onChange = actionMap[ActionDescriptor(htmlId(option))] ?: ""
                         }
                     }
+                }
+                input(InputType.text, classes = "form-control") {
+                    id = htmlId(option, "_value")
+                    placeholder = option.optionVariants.first().arg
+                }
+            }
+            option.hasValue -> div("input-group") {
+                div("input-group-text") {
+                    div("form-check") {
+                        label("form-check-label mono-font-bold") {
+                            +htmlLabel(option)
+                            input(inputType(optionSet), classes = "form-check-input") {
+                                name = htmlId(optionSet)
+                                id = htmlId(option)
+                                value = ""
+                            }
+                            onChange = actionMap[ActionDescriptor(htmlId(option))] ?: ""
+                        }
+                    }
+                }
+                select("form-select") {
+                    id = htmlId(option, "_value")
+                    option {
+                        selected = true
+                        +""
+                    }
+                    option.values?.forEach { optValue ->
+                        option {
+                            value = optValue
+                            +optValue
+                        }
+                    }
+                }
+            }
+            else -> div("form-check") {
+                label("form-check-label mono-font-bold") {
+                    htmlFor = htmlId(option)
+                    +htmlLabel(option)
+                    input(inputType(optionSet), classes = "form-check-input") {
+                        name = htmlId(optionSet)
+                        id = htmlId(option)
+                        value = ""
+                    }
+                    onChange = actionMap[ActionDescriptor(htmlId(option))] ?: ""
+                }
+            }
+        }
+    }
+
+    private fun inputType(optionSet: OptionSet) =
+        when (optionSet) {
+            is ChoiceOptionSet -> InputType.radio
+            else -> InputType.checkBox
+        }
+
+    private fun FlowContent.evaluate(optionSet: ChoiceOptionSet) {
+        div("list-group") {
+            optionSet.forEach { option ->
+                div("list-group-item") {
+                    evaluate(option, optionSet)
                     option.description?.let { text(it) }
                 }
             }
         }
     }
 
-    private fun htmlLabel(option: Option): String = option.optionVariants.joinToString(separator = ", ") { it.value }
+    private fun htmlLabel(option: Option): String = option.optionVariants.joinToString(separator = ", ") { it.pattern }
 
 }
 

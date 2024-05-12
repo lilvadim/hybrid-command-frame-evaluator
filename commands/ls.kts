@@ -1,10 +1,6 @@
 import ru.nsu.hybrid.dsl.builder.*
 
 simpleCommand("ls") {
-    toggles {
-        option("--top-level")
-        option("--top-level")
-    }
     entry("Filter") {
         choice {
             option("-a") { description("Show hidden files") }
@@ -20,7 +16,7 @@ simpleCommand("ls") {
     }
     entry("Format") {
         toggles {
-            option("--author")
+            option("--author") { description("With -l, print the author of each file") }
             option("--block-size=<unit>") {
                 values("K", "M", "G", "T", "KB", "MB", "GB", "TB")
                 description("Units to use")
@@ -62,7 +58,7 @@ simpleCommand("ls") {
                         "or smallest file size first depending on the other options given")
                 exclusive in "foo"
             }
-            option("-w<width>") {
+            option("-w <width>") {
                 description("Set output width to the number of columns. 0 means no limit")
             }
         }

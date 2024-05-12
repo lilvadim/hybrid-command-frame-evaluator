@@ -80,7 +80,7 @@ class CommandDescriptionEvaluatorTest {
             }
         }
 
-        val actual = uut.fromFile(File("commands/ls.kts"))
+        val actual = uut.evaluateFromFile(File("commands/ls.kts"))
 
         assertThat(actual)
             .usingRecursiveComparison()

@@ -1,11 +1,10 @@
 package ru.nsu.hybrid.dsl.builder
 
-import ru.nsu.hybrid.cf.commandDesc.*
 import ru.nsu.hybrid.cf.commandDesc.entry.*
 import ru.nsu.hybrid.cf.commandDesc.option.*
+import ru.nsu.hybrid.cf.commandDesc.option.effect.SideEffect
 import ru.nsu.hybrid.dsl.ext.OptionBuilderExtensionMixin
 import ru.nsu.hybrid.dsl.mapper.DslMapper
-import kotlin.properties.PropertyDelegateProvider
 
 @DslMarker
 annotation class HybridDsl

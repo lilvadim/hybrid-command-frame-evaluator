@@ -1,5 +1,7 @@
 package ru.nsu.hybrid.cf.evaluator.types
 
+import com.fasterxml.jackson.annotation.JsonRawValue
+
 data class OptionPattern(
     val pattern: String
 )
@@ -23,6 +25,16 @@ data class CommandDescriptor(
 data class CommandOption(
     val option: String,
     val index: Int?,
+    @JsonRawValue
     val value: String?,
+)
+
+data class UpdateOptionsParameters(
+    val addOptions: List<CommandOption>,
+    val removeOptions: List<CommandOption>
+)
+
+data class CommandContext(
+    val descriptor: CommandDescriptor
 )
 

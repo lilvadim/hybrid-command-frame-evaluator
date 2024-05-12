@@ -1,6 +1,5 @@
 package ru.nsu.hybrid.dsl.ext
 
-import ru.nsu.hybrid.cf.commandDesc.GroupType
 import ru.nsu.hybrid.dsl.builder.OptionBuilder
 
 interface OptionBuilderExtensionMixin : DslExtensionMixin<OptionBuilder> {
@@ -57,4 +56,9 @@ interface OptionBuilderExtensionMixin : DslExtensionMixin<OptionBuilder> {
     class Groups(val values: Set<String>)
 
     class OptionRefs(val values: Set<String>)
+
+    enum class GroupType {
+        INCLUSIVE,
+        EXCLUSIVE,
+    }
 }

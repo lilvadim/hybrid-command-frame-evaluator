@@ -10,7 +10,7 @@ class CommandFrameEvaluatorFacade(
     private val commandFrameEvaluator: CommandFrameEvaluator = CommandFrameEvaluator(),
 ) {
     fun evaluateHtmlCommandFrame(source: File, outFile: File?): String {
-        val commandObject = commandDescriptionEvaluator.fromFile(source)
+        val commandObject = commandDescriptionEvaluator.evaluateFromFile(source)
         val commandFrame = commandFrameEvaluator.evaluate(commandObject)
 
         val html = commandFrame.serialize()

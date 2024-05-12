@@ -4,14 +4,11 @@ import org.mapstruct.Mapper
 import org.mapstruct.Mapping
 import org.mapstruct.ReportingPolicy
 import org.mapstruct.factory.Mappers
-import ru.nsu.hybrid.cf.commandDesc.entry.Command
 import ru.nsu.hybrid.cf.commandDesc.entry.SimpleCommand
 import ru.nsu.hybrid.cf.commandDesc.entry.traverse
 import ru.nsu.hybrid.cf.commandDesc.option.Option
 import ru.nsu.hybrid.cf.commandDesc.option.OptionExpr
-import ru.nsu.hybrid.cf.commandDesc.option.OptionRef
 import ru.nsu.hybrid.cf.evaluator.types.CommandDescription
-import ru.nsu.hybrid.cf.evaluator.types.CommandOption
 import ru.nsu.hybrid.cf.evaluator.types.CommandOptionDescription
 import ru.nsu.hybrid.cf.evaluator.types.OptionPattern
 

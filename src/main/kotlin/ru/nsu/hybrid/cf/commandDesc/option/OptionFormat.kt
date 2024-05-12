@@ -7,7 +7,6 @@ object OptionFormat {
 
     object ValueSeparator {
         val notSeparatorFormat = Regex("-|\\w")
-        val knownSeparators = listOf("=", ",")
     }
 }
 

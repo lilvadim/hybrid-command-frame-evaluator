@@ -1,4 +1,4 @@
-package ru.nsu.hybrid.cf.commandDesc
+package ru.nsu.hybrid.cf.commandDesc.option.effect
 
 import ru.nsu.hybrid.cf.commandDesc.option.OptionRef
 

@@ -6,7 +6,7 @@ import javax.script.ScriptEngineManager
 
 class CommandDescriptionEvaluator {
 
-    fun fromFile(file: File): Command {
+    fun evaluateFromFile(file: File): Command {
         val extension = file.extension
         if (extension != "kts") {
             throw IllegalArgumentException("${file.name}: Only *.kts files are supported")
