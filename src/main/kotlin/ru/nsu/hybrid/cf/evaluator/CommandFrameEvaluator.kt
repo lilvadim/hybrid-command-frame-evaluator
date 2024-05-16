@@ -84,8 +84,38 @@ class CommandFrameEvaluator(
         }
     }
 
-    private fun FlowContent.evaluate(entry: TabEntry) {
-        TODO()
+    private fun FlowContent.evaluate(tabEntry: TabEntry) {
+        div {
+            h3 { +tabEntry.name }
+            nav {
+                div("nav nav-underline") {
+                    role = "tablist"
+                    tabEntry.entries?.forEach { subEntry ->
+                        button(classes = "nav-link tab-btn", type = ButtonType.button) {
+                            +subEntry.name
+                            id = htmlId(subEntry, "tab")
+                            role = "tab"
+                            attributes["data-bs-toggle"] = "tab"
+                            attributes["data-bs-target"] = "#" + htmlId(subEntry, "tab_pane")
+                            attributes["aria-controls"] = htmlId(subEntry, "tab_pane")
+                            attributes["aria-selected"] = "false"
+                        }
+                    }
+                }
+            }
+            div("tab-content") {
+                tabEntry.entries?.forEach { subEntry ->
+                    div("tab-pane list-group list-group-flush") {
+                        id = htmlId(subEntry, "tab_pane")
+                        role = "tabpanel"
+                        attributes["aria-labelledby"] = htmlId(subEntry, "tab")
+                        tabIndex = "0"
+                        subEntry.options?.forEach { optionSet -> div("list-group-item") { evaluate(optionSet) } }
+                        subEntry.entries?.forEach { s -> div("list-group-item") { evaluate(s) } }
+                    }
+                }
+            }
+        }
     }
 
     private fun FlowContent.evaluate(entry: InlineEntry) {
@@ -106,7 +136,7 @@ class CommandFrameEvaluator(
     }
 
     private fun FlowContent.evaluate(optionSet: ToggleOptionSet) {
-        div("list-group") {
+        div("list-group list-group-flush") {
             optionSet.forEach { option ->
                 div("list-group-item") {
                     evaluate(option, optionSet)
@@ -117,13 +147,14 @@ class CommandFrameEvaluator(
     }
 
     private fun FlowContent.evaluate(option: Option, optionSet: OptionSet) {
+        val customClass = if (optionSet is ChoiceOptionSet) "radio-check" else ""
         when {
             option.hasValue && option.values.isNullOrEmpty() -> div("input-group") {
                 div("input-group-text") {
                     div("form-check") {
                         label("form-check-label mono-font-bold") {
                             +htmlLabel(option)
-                            input(inputType(optionSet), classes = "form-check-input") {
+                            input(InputType.checkBox, classes = "form-check-input $customClass") {
                                 name = htmlId(optionSet)
                                 id = htmlId(option)
                                 value = ""
@@ -133,7 +164,7 @@ class CommandFrameEvaluator(
                     }
                 }
                 input(InputType.text, classes = "form-control") {
-                    id = htmlId(option, "_value")
+                    id = htmlId(option, HtmlIdSuffix.VALUE)
                     placeholder = option.optionVariants.first().arg
                 }
             }
@@ -142,7 +173,7 @@ class CommandFrameEvaluator(
                     div("form-check") {
                         label("form-check-label mono-font-bold") {
                             +htmlLabel(option)
-                            input(inputType(optionSet), classes = "form-check-input") {
+                            input(InputType.checkBox, classes = "form-check-input $customClass") {
                                 name = htmlId(optionSet)
                                 id = htmlId(option)
                                 value = ""
@@ -152,7 +183,7 @@ class CommandFrameEvaluator(
                     }
                 }
                 select("form-select") {
-                    id = htmlId(option, "_value")
+                    id = htmlId(option, HtmlIdSuffix.VALUE)
                     option {
                         selected = true
                         +""
@@ -169,7 +200,7 @@ class CommandFrameEvaluator(
                 label("form-check-label mono-font-bold") {
                     htmlFor = htmlId(option)
                     +htmlLabel(option)
-                    input(inputType(optionSet), classes = "form-check-input") {
+                    input(InputType.checkBox, classes = "form-check-input $customClass") {
                         name = htmlId(optionSet)
                         id = htmlId(option)
                         value = ""
@@ -179,12 +210,6 @@ class CommandFrameEvaluator(
             }
         }
     }
-
-    private fun inputType(optionSet: OptionSet) =
-        when (optionSet) {
-            is ChoiceOptionSet -> InputType.radio
-            else -> InputType.checkBox
-        }
 
     private fun FlowContent.evaluate(optionSet: ChoiceOptionSet) {
         div("list-group") {

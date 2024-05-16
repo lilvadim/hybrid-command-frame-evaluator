@@ -39,7 +39,7 @@ class ComplexCommand(
     val subcommands: List<SubCommand>?,
 ) : Command(name, options, entries)
 
-sealed class SimpleCommand(
+open class SimpleCommand(
     name: String,
     options: List<OptionSet>?,
     override val entries: List<SubEntry>?,

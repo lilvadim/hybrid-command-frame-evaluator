@@ -7,12 +7,19 @@ import ru.nsu.hybrid.cf.commandDesc.option.Option
 import ru.nsu.hybrid.cf.commandDesc.option.ToggleOptionSet
 
 fun htmlId(value: Any, suffix: String = ""): String {
-    return when (value) {
+    val id = when (value) {
         is Option -> "option_" + value.hashCode().toString()
         is ToggleOptionSet -> "option_toggles_" + value.hashCode().toString()
         is ChoiceOptionSet -> "option_choice_" + value.hashCode().toString()
         is SubEntry -> "sub_entry_" + value.hashCode().toString()
         is Command -> "command_frame_" + value.name
         else -> value.hashCode().toString()
-    } + suffix
+    }
+
+    return listOf(id, suffix).filter { it.isNotBlank() }.joinToString(separator = "_")
+}
+
+object HtmlIdSuffix {
+    const val VALUE: String = "value"
+    const val HANDLER: String = "handler"
 }

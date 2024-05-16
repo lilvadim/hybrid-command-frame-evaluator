@@ -1,8 +1,8 @@
 package ru.nsu.hybrid.dsl.ext
 
-import ru.nsu.hybrid.dsl.builder.OptionBuilder
+import ru.nsu.hybrid.dsl.builder.OptionContext
 
-interface OptionBuilderExtensionMixin : DslExtensionMixin<OptionBuilder> {
+interface OptionBuilderExtensionMixin : DslExtensionMixin<OptionContext> {
     val exclusive
         get() = GroupType.EXCLUSIVE
     val inclusive

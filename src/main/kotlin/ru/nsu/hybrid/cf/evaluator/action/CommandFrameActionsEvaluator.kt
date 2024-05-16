@@ -8,6 +8,7 @@ import ru.nsu.hybrid.cf.commandDesc.option.Option
 import ru.nsu.hybrid.cf.commandDesc.semantics.OptionSemantics
 import ru.nsu.hybrid.cf.commandDesc.semantics.SemanticsAnalyzer
 import ru.nsu.hybrid.cf.commandDesc.semantics.SimpleCommandSemanticsContext
+import ru.nsu.hybrid.cf.evaluator.HtmlIdSuffix
 import ru.nsu.hybrid.cf.evaluator.htmlId
 import ru.nsu.hybrid.cf.evaluator.types.CommandContext
 import ru.nsu.hybrid.cf.evaluator.types.CommandDescriptor
@@ -51,7 +52,7 @@ class CommandFrameActionsEvaluator(
         val optionRefToPattern = commandSemantics.flattenOptionSets.flatten().associate {
             option.references().first() to option.optionVariants.map { it.pattern }.first()
         }
-        val valueExtractorName = htmlId(option, "_value")
+        val valueExtractorName = htmlId(option, HtmlIdSuffix.VALUE)
         val addOptionsWhenToggleOn = optionSemantics.whenToggleOn.include.map {
             val value = if (option.isReferenced(it)) "$valueExtractorName()" else null
             CommandOption(option = optionRefToPattern[it] ?: it.value, index = null, value = value)
@@ -68,7 +69,7 @@ class CommandFrameActionsEvaluator(
             val value = if (option.isReferenced(it)) "$valueExtractorName()" else null
             CommandOption(option = optionRefToPattern[it] ?: it.value, index = null, value = value)
         }
-        val handlerName = htmlId(option, "_handler")
+        val handlerName = htmlId(option, HtmlIdSuffix.HANDLER)
         val updateOptionsWhenToggleOn = UpdateOptionsParameters(
             addOptions = addOptionsWhenToggleOn,
             removeOptions = removeOptionsWhenToggleOn
@@ -87,7 +88,7 @@ class CommandFrameActionsEvaluator(
                 }
             }
             function $valueExtractorName() {
-                var elem = document.getElementById('${htmlId(option, "_value")}');
+                var elem = document.getElementById('${htmlId(option, HtmlIdSuffix.VALUE)}');
                 if (elem) {
                     return elem.value;
                 }
@@ -128,7 +129,7 @@ class CommandFrameActionsEvaluator(
                     if (elem) {
                         elem.checked = true;
                     }
-                    var elemValue = document.getElementById(optionToId[option.option] + '_value');
+                    var elemValue = document.getElementById(optionToId[option.option] + '${HtmlIdSuffix.VALUE}');
                     if (elemValue) {
                         elemValue.value = option.value;
                     }

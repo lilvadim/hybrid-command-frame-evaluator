@@ -1,6 +1,9 @@
 package ru.nsu.hybrid.dsl.builder
 
-import ru.nsu.hybrid.cf.commandDesc.entry.*
+import ru.nsu.hybrid.cf.commandDesc.entry.ComplexCommand
+import ru.nsu.hybrid.cf.commandDesc.entry.SimpleCommand
+import ru.nsu.hybrid.cf.commandDesc.entry.SubCommand
+import ru.nsu.hybrid.cf.commandDesc.entry.SubEntry
 import ru.nsu.hybrid.cf.commandDesc.option.*
 import ru.nsu.hybrid.cf.commandDesc.option.effect.SideEffect
 import ru.nsu.hybrid.dsl.ext.OptionBuilderExtensionMixin
@@ -10,7 +13,7 @@ import ru.nsu.hybrid.dsl.mapper.DslMapper
 annotation class HybridDsl
 
 @HybridDsl
-class OptionBuilder(
+class OptionContext(
     val optionVariants: Set<OptionExpr>
 ) : OptionBuilderExtensionMixin {
     override val ctx = this
@@ -44,87 +47,110 @@ class OptionBuilder(
     fun inclusiveInGroups(vararg groupIds: String) {
         this.inclusiveInGroups = groupIds.toSet()
     }
+
+    fun validated(): OptionContext {
+        if (optionVariants.isEmpty()) {
+            throw IllegalStateException("Option variants is empty")
+        }
+
+        val allExpressionsHaveArg = optionVariants.all { it.hasArg }
+        val allExpressionsHaveNotArg = optionVariants.all { !it.hasArg }
+
+        val valid = allExpressionsHaveNotArg || allExpressionsHaveArg
+
+        if (!valid) {
+            throw IllegalStateException("All option variants must either have or have not argument: $optionVariants")
+        }
+
+        return this
+    }
 }
 
 @HybridDsl
-abstract class EntryBuilder(
+abstract class EntryContext(
     val name: String
 ) {
     val options: MutableList<OptionSet> = mutableListOf()
 
-    fun choice(config: OptionSetBuilder.() -> Unit) {
-        val builder = OptionSetBuilder().apply(config)
-        options += ChoiceOptionSet(builder)
+    fun choice(config: OptionSetContext.() -> Unit) {
+        val context = OptionSetContext().apply(config)
+        options += ChoiceOptionSet(context)
     }
 
-    fun toggles(config: OptionSetBuilder.() -> Unit) {
-        val builder = OptionSetBuilder().apply(config)
-        options += ToggleOptionSet(builder)
+    fun toggles(config: OptionSetContext.() -> Unit) {
+        val context = OptionSetContext().apply(config)
+        options += ToggleOptionSet(context)
     }
 }
 
 @HybridDsl
-open class OptionSetBuilder(val set: MutableSet<Option> = mutableSetOf()) : MutableSet<Option> by set {
-    fun option(vararg optionVariants: String, config: OptionBuilder.() -> Unit = {}) {
-        val builder = OptionBuilder(optionVariants.map { OptionExpr(it) }.toSet()).apply(config)
-        val option = DslMapper.instance.option(builder)
+open class OptionSetContext(val set: MutableSet<Option> = mutableSetOf()) : MutableSet<Option> by set {
+    fun option(vararg optionVariants: String, config: OptionContext.() -> Unit = {}) {
+        val context = OptionContext(optionVariants.map { OptionExpr(it) }.toSet()).apply(config).validated()
+        val option = DslMapper.instance.option(context)
         this += option
     }
 }
 
 @HybridDsl
-open class SubEntryBuilder(name: String) : EntryBuilder(name) {
-    val entries: MutableList<InlineEntry> = mutableListOf()
+open class SubEntryContext(name: String) : EntryContext(name) {
+    val entries: MutableList<SubEntry> = mutableListOf()
 
-    fun entry(name: String, config: SubEntryBuilder.() -> Unit) {
-        val builder = SubEntryBuilder(name).apply(config)
-        val entry = DslMapper.instance.inlineEntry(builder)
+    fun entry(name: String, config: SubEntryContext.() -> Unit) {
+        val context = SubEntryContext(name).apply(config)
+        val entry = DslMapper.instance.inlineEntry(context)
         entries += entry
+    }
+
+    fun tabs(name: String = "", config: SubEntryContext.() -> Unit) {
+        val context = SubEntryContext(name).apply(config)
+        val tabEntry = DslMapper.instance.tabEntry(context)
+        entries += tabEntry
     }
 }
 
 @HybridDsl
-open class CommandBuilder(name: String) : EntryBuilder(name) {
+open class CommandContext(name: String) : EntryContext(name) {
     val entries: MutableList<SubEntry> = mutableListOf()
 
-    fun tab(name: String, config: SubEntryBuilder.() -> Unit) {
-        val builder = SubEntryBuilder(name).apply(config)
-        val tabEntry = DslMapper.instance.tabEntry(builder)
+    fun tabs(name: String = "", config: SubEntryContext.() -> Unit) {
+        val context = SubEntryContext(name).apply(config)
+        val tabEntry = DslMapper.instance.tabEntry(context)
         entries += tabEntry
     }
 
-    fun entry(name: String, config: SubEntryBuilder.() -> Unit) {
-        val builder = SubEntryBuilder(name).apply(config)
-        val inlineEntry = DslMapper.instance.inlineEntry(builder)
+    fun entry(name: String, config: SubEntryContext.() -> Unit) {
+        val context = SubEntryContext(name).apply(config)
+        val inlineEntry = DslMapper.instance.inlineEntry(context)
         entries += inlineEntry
     }
 }
 
 @HybridDsl
-class SubCommandBuilder(
+class SubCommandContext(
     name: String,
     val parentCommandName: String
-) : CommandBuilder(name)
+) : CommandContext(name)
 
 @HybridDsl
-class ComplexCommandBuilder(name: String) : CommandBuilder(name) {
+class ComplexCommandContext(name: String) : CommandContext(name) {
     val subcommands: MutableList<SubCommand> = mutableListOf()
 
-    fun subcommand(name: String, config: SubCommandBuilder.() -> Unit) {
-        val builder = SubCommandBuilder(name, this.name).apply(config)
-        val subcommand = DslMapper.instance.subCommand(builder)
+    fun subcommand(name: String, config: SubCommandContext.() -> Unit) {
+        val context = SubCommandContext(name, this.name).apply(config)
+        val subcommand = DslMapper.instance.subCommand(context)
         subcommands += subcommand
     }
 }
 
 @HybridDsl
-fun simpleCommand(name: String, config: CommandBuilder.() -> Unit): SimpleCommand {
-    val builder = CommandBuilder(name).apply(config)
-    return DslMapper.instance.simpleCommand(builder)
+fun simpleCommand(name: String, config: CommandContext.() -> Unit): SimpleCommand {
+    val context = CommandContext(name).apply(config)
+    return DslMapper.instance.simpleCommand(context)
 }
 
 @HybridDsl
-fun complexCommand(name: String, config: ComplexCommandBuilder.() -> Unit): ComplexCommand {
-    val builder = ComplexCommandBuilder(name).apply(config)
-    return DslMapper.instance.complexCommand(builder)
+fun complexCommand(name: String, config: ComplexCommandContext.() -> Unit): ComplexCommand {
+    val context = ComplexCommandContext(name).apply(config)
+    return DslMapper.instance.complexCommand(context)
 }

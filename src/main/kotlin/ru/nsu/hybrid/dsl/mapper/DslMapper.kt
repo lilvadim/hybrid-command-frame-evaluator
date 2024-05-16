@@ -15,17 +15,17 @@ import ru.nsu.hybrid.dsl.builder.*
 abstract class DslMapper {
 
     @BeanMapping(ignoreUnmappedSourceProperties = ["exclusive", "inclusive", "toggle", "ctx"])
-    abstract fun option(optionBuilder: OptionBuilder): Option
+    abstract fun option(optionContext: OptionContext): Option
 
-    abstract fun inlineEntry(entryBuilder: SubEntryBuilder): InlineEntry
+    abstract fun inlineEntry(entryBuilder: SubEntryContext): InlineEntry
 
-    abstract fun tabEntry(entryBuilder: SubEntryBuilder): TabEntry
+    abstract fun tabEntry(entryBuilder: SubEntryContext): TabEntry
 
-    abstract fun simpleCommand(commandBuilder: CommandBuilder): SimpleCommand
+    abstract fun simpleCommand(commandBuilder: CommandContext): SimpleCommand
 
-    abstract fun subCommand(subCommandBuilder: SubCommandBuilder): SubCommand
+    abstract fun subCommand(subCommandBuilder: SubCommandContext): SubCommand
 
-    abstract fun complexCommand(complexCommandBuilder: ComplexCommandBuilder): ComplexCommand
+    abstract fun complexCommand(complexCommandBuilder: ComplexCommandContext): ComplexCommand
 
     companion object {
         val instance: DslMapper = Mappers.getMapper(DslMapper::class.java)
