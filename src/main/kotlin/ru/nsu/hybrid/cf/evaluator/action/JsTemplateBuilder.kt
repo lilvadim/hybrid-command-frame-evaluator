@@ -23,7 +23,7 @@ class JsTemplateBuilder(
                 window.hybrid.utils.toggleOff(input);
             });
             options.forEach((opt) => {
-                if (opt.option.type === 'UNIX') {
+                if (opt.option.type === 'UNIX' && opt.option.words) {
                     opt.option.words?.forEach((w) => {
                         var input = document.getElementById($idMapVarName[opt.option.prefix + w]);
                         window.hybrid.utils.toggleOn(input);
@@ -80,7 +80,7 @@ class JsTemplateBuilder(
         valueExtractorName: String,
         inputId: String
     ) = """
-        function $handlerName() {
+        function $handlerName(event) {
             var data = document.getElementById('${optionId}').checked;
             if (data) {
                 window.hybrid.terminal.updateOptions(${objectMapper.writeValueAsString(updateOptionsWhenToggleOn)});

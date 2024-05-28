@@ -174,7 +174,7 @@ class CommandFrameEvaluator(
                                 id = identifier(option)
                                 value = ""
                             }
-                            onChange = actionMap[ActionDescriptor(identifier(option))] ?: ""
+                            onClick = actionMap[ActionDescriptor(identifier(option))] ?: ""
                         }
                     }
                 }
@@ -193,7 +193,7 @@ class CommandFrameEvaluator(
                                 id = identifier(option)
                                 value = ""
                             }
-                            onChange = actionMap[ActionDescriptor(identifier(option))] ?: ""
+                            onClick = actionMap[ActionDescriptor(identifier(option))] ?: ""
                         }
                     }
                 }
@@ -220,7 +220,7 @@ class CommandFrameEvaluator(
                         id = identifier(option)
                         value = ""
                     }
-                    onChange = actionMap[ActionDescriptor(identifier(option))] ?: ""
+                    onClick = actionMap[ActionDescriptor(identifier(option))] ?: ""
                 }
             }
         }

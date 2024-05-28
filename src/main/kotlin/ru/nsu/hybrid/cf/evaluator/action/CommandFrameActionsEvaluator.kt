@@ -80,7 +80,7 @@ class CommandFrameActionsEvaluator(
             inputId
         )
 
-        return Pair("$handlerName()", script)
+        return Pair("$handlerName(event)", script)
     }
 
     private fun mapRemoveOptions(
