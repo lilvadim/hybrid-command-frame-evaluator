@@ -32,7 +32,6 @@ class JsTemplateBuilder(
                             window.hybrid.utils.setValue(inputValue, opt.value);
                         }
                     });
-                    
                 } else {
                     var input = document.getElementById($idMapVarName[opt.option.option]);
                     window.hybrid.utils.toggleOn(input);
