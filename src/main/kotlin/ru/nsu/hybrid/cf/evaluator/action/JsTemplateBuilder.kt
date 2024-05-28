@@ -36,7 +36,7 @@ class JsTemplateBuilder(
                     var input = document.getElementById($idMapVarName[opt.option.option]);
                     window.hybrid.utils.toggleOn(input);
                     if (opt.value) {
-                        var inputValue = document.getElementById($idMapVarName[opt.option.option]);
+                        var inputValue = document.getElementById($idMapVarName[opt.option.option] + '_${Identifier.Suffix.VALUE}');
                         window.hybrid.utils.setValue(inputValue, opt.value);
                     }
                 }
