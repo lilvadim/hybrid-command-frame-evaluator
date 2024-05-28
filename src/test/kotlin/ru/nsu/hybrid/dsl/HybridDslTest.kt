@@ -88,7 +88,7 @@ class HybridDslTest {
     fun sample_complexCommand() {
         complexCommand("git") {
             subcommand("commit") {
-                tab("Sample Tab Entry") {
+                entry("Sample Tab Entry") {
                     choice {
                         option("-o <arg>", "--option <arg>") {
                             description("Option description")

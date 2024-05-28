@@ -4,11 +4,6 @@ object OptionFormat {
     val option = Regex("^(-|--)[^\\s<>]+(\\s)*(<[^\\s<>]*>)*\$")
     val optionWithArg = Regex("^(-|--)[^\\s<>]+(\\s)*(<[^\\s<>]*>)\$")
     val optionArg = Regex("<[^\\s<>]*>")
-
-    object ValueSeparator {
-        val notSeparatorFormat = Regex("-|\\w")
-    }
 }
 
-fun isNotSeparator(value: CharSequence) = OptionFormat.ValueSeparator.notSeparatorFormat.matches(value)
-fun isOptionValueSeparator(value: CharSequence) = !isNotSeparator(value)
+fun isOptionValueSeparator(value: CharSequence) = value == "=" || value == ":" || value == " "

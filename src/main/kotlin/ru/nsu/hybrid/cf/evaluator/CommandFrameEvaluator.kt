@@ -17,35 +17,33 @@ class CommandFrameEvaluator(
     private val actionMap = mutableMapOf<ActionDescriptor, String>()
 
     fun evaluate(command: Command): Document {
-        val scriptContext = when (command) {
-            is SimpleCommand -> {
-                val (script, map) = actionsEvaluator.evaluate(command)
-                actionMap.putAll(map)
-                script
-            }
-            else -> null
-        }
         return createHTMLDocument().html {
             lang = "javascript"
-            head {
-            }
+            head { }
             body {
-                script {
-                    unsafe {
-                        raw("$scriptContext")
-                    }
-                }
+                script { +initActionsAndGetScriptContext(command) }
                 when (command) {
+                    is ComplexCommand -> {
+                        div {
+                            evaluate(command)
+                            command.subcommands?.forEach { evaluate(it) }
+                        }
+                    }
                     is SimpleCommand -> evaluate(command)
-                    is ComplexCommand -> evaluate(command)
                 }
             }
         }
     }
 
+    private fun initActionsAndGetScriptContext(command: Command): String {
+        val actions = actionsEvaluator.commandFrameActions(command)
+        actionMap.putAll(actions.actionMap)
+        return actions.scriptContext
+    }
+
     private fun FlowContent.evaluate(complexCommand: ComplexCommand) {
         div("container") {
-            id = htmlId(complexCommand)
+            id = identifier(complexCommand)
             h2("mono-font-bold") { +complexCommand.name }
             complexCommand.subcommands?.let {
                 if (it.isNotEmpty()) {
@@ -56,6 +54,7 @@ class CommandFrameEvaluator(
                 complexCommand.subcommands?.forEach { subcommand ->
                     button(classes = "list-group-item") {
                         p("mono-font-bold") { +subcommand.name }
+                        onClick = actionMap[ActionDescriptor(identifier(subcommand))] ?: ""
                     }
                 }
             }
@@ -71,7 +70,23 @@ class CommandFrameEvaluator(
 
     private fun FlowContent.evaluate(simpleCommand: SimpleCommand) {
         div {
-            h2("mono-font-bold") { +simpleCommand.name }
+            id = identifier(simpleCommand)
+            if (simpleCommand is SubCommand) {
+                classes += "invisible"
+            }
+
+            h2("mono-font-bold") {
+                if (simpleCommand is SubCommand) {
+                    a(href = "#") {
+                        +simpleCommand.parentCommandName
+                        onClick = actionMap[ActionDescriptor(commandIdentifier(
+                            simpleCommand.parentCommandName, simpleCommand.name
+                        ))] ?: ""
+                    }
+                }
+                +" "
+                +simpleCommand.name
+            }
             simpleCommand.options?.forEach { optionSet -> div("list-group-item") { evaluate(optionSet) } }
             simpleCommand.entries?.forEach { evaluate(it) }
         }
@@ -93,11 +108,11 @@ class CommandFrameEvaluator(
                     tabEntry.entries?.forEach { subEntry ->
                         button(classes = "nav-link tab-btn", type = ButtonType.button) {
                             +subEntry.name
-                            id = htmlId(subEntry, "tab")
+                            id = identifier(subEntry, "tab")
                             role = "tab"
                             attributes["data-bs-toggle"] = "tab"
-                            attributes["data-bs-target"] = "#" + htmlId(subEntry, "tab_pane")
-                            attributes["aria-controls"] = htmlId(subEntry, "tab_pane")
+                            attributes["data-bs-target"] = "#" + identifier(subEntry, "tab_pane")
+                            attributes["aria-controls"] = identifier(subEntry, "tab_pane")
                             attributes["aria-selected"] = "false"
                         }
                     }
@@ -106,9 +121,9 @@ class CommandFrameEvaluator(
             div("tab-content") {
                 tabEntry.entries?.forEach { subEntry ->
                     div("tab-pane list-group list-group-flush") {
-                        id = htmlId(subEntry, "tab_pane")
+                        id = identifier(subEntry, "tab_pane")
                         role = "tabpanel"
-                        attributes["aria-labelledby"] = htmlId(subEntry, "tab")
+                        attributes["aria-labelledby"] = identifier(subEntry, "tab")
                         tabIndex = "0"
                         subEntry.options?.forEach { optionSet -> div("list-group-item") { evaluate(optionSet) } }
                         subEntry.entries?.forEach { s -> div("list-group-item") { evaluate(s) } }
@@ -155,16 +170,16 @@ class CommandFrameEvaluator(
                         label("form-check-label mono-font-bold") {
                             +htmlLabel(option)
                             input(InputType.checkBox, classes = "form-check-input $customClass") {
-                                name = htmlId(optionSet)
-                                id = htmlId(option)
+                                name = identifier(optionSet)
+                                id = identifier(option)
                                 value = ""
                             }
-                            onChange = actionMap[ActionDescriptor(htmlId(option))] ?: ""
+                            onChange = actionMap[ActionDescriptor(identifier(option))] ?: ""
                         }
                     }
                 }
                 input(InputType.text, classes = "form-control") {
-                    id = htmlId(option, HtmlIdSuffix.VALUE)
+                    id = identifier(option, Identifier.Suffix.VALUE)
                     placeholder = option.optionVariants.first().arg
                 }
             }
@@ -174,16 +189,16 @@ class CommandFrameEvaluator(
                         label("form-check-label mono-font-bold") {
                             +htmlLabel(option)
                             input(InputType.checkBox, classes = "form-check-input $customClass") {
-                                name = htmlId(optionSet)
-                                id = htmlId(option)
+                                name = identifier(optionSet)
+                                id = identifier(option)
                                 value = ""
                             }
-                            onChange = actionMap[ActionDescriptor(htmlId(option))] ?: ""
+                            onChange = actionMap[ActionDescriptor(identifier(option))] ?: ""
                         }
                     }
                 }
                 select("form-select") {
-                    id = htmlId(option, HtmlIdSuffix.VALUE)
+                    id = identifier(option, Identifier.Suffix.VALUE)
                     option {
                         selected = true
                         +""
@@ -198,14 +213,14 @@ class CommandFrameEvaluator(
             }
             else -> div("form-check") {
                 label("form-check-label mono-font-bold") {
-                    htmlFor = htmlId(option)
+                    htmlFor = identifier(option)
                     +htmlLabel(option)
                     input(InputType.checkBox, classes = "form-check-input $customClass") {
-                        name = htmlId(optionSet)
-                        id = htmlId(option)
+                        name = identifier(optionSet)
+                        id = identifier(option)
                         value = ""
                     }
-                    onChange = actionMap[ActionDescriptor(htmlId(option))] ?: ""
+                    onChange = actionMap[ActionDescriptor(identifier(option))] ?: ""
                 }
             }
         }

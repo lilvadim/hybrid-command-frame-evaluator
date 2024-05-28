@@ -1,6 +1,6 @@
 package ru.nsu.hybrid.cf.evaluator.action
 
-data class CommandFrameActions(
+open class CommandFrameActions(
     val scriptContext: String,
     val actionMap: Map<ActionDescriptor, String>
 )

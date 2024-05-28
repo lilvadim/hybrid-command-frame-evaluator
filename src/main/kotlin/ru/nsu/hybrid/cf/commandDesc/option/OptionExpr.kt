@@ -11,6 +11,8 @@ data class OptionExpr(
     val reference: OptionRef = OptionRef(reference())
     val pattern: String = pattern()
     val arg: String = arg()
+    val delimiter: String = delimiter()
+    val type: OptionType = OptionType.entries.firstOrNull { it.test(value) } ?: OptionType.NON_STD
 
     init {
         validate()
@@ -19,6 +21,10 @@ data class OptionExpr(
     private fun reference(): String = value.replace(OptionFormat.optionArg, "").trimEnd {
         isOptionValueSeparator(it.toString())
     }
+
+    private fun delimiter(): String = value.replace(OptionFormat.optionArg, "").lastOrNull {
+        isOptionValueSeparator(it.toString())
+    }?.toString() ?: " "
 
     private fun pattern(): String = value.replace(OptionFormat.optionArg, "").trimEnd()
 

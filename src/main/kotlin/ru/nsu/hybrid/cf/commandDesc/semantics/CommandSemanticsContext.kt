@@ -1,32 +1,25 @@
 package ru.nsu.hybrid.cf.commandDesc.semantics
 
-import ru.nsu.hybrid.cf.commandDesc.entry.ComplexCommand
-import ru.nsu.hybrid.cf.commandDesc.entry.SimpleCommand
+import ru.nsu.hybrid.cf.commandDesc.entry.Command
 import ru.nsu.hybrid.cf.commandDesc.option.ChoiceOptionSet
 import ru.nsu.hybrid.cf.commandDesc.option.Option
 import ru.nsu.hybrid.cf.commandDesc.option.OptionRef
 import ru.nsu.hybrid.cf.commandDesc.option.OptionSet
 import ru.nsu.hybrid.cf.commandDesc.option.effect.SideEffect
 
-class SimpleCommandSemanticsContext(
-    val command: SimpleCommand,
-    private val groups: Map<String, List<OptionRef>>,
-    val flattenOptionSets: List<OptionSet>,
+class CommandSemanticsContext(
+    val command: Command,
+    val groups: Map<String, List<OptionRef>>,
+    val optionSets: List<OptionSet>,
 ) {
     private val optionSemanticsCache = mutableMapOf<OptionRef, OptionSemantics>()
-    private val optionsByRef: Map<OptionRef, Option> = buildMap {
-        flattenOptionSets.forEach { set ->
-            set.forEach { opt ->
-                val refs = opt.references()
-                refs.forEach { ref ->
-                    put(ref, opt)
-                }
-            }
-        }
-    }
+
+    val optionsByRef: Map<OptionRef, Option> = optionSets.flatten().flatMap { opt ->
+        opt.references().map { it to opt }
+    }.toMap()
 
     private val optionSetByRef: Map<OptionRef, OptionSet> = buildMap {
-        flattenOptionSets.forEach { set ->
+        optionSets.forEach { set ->
             set.forEach { opt ->
                 val refs = opt.references()
                 refs.forEach { ref ->
@@ -44,21 +37,21 @@ class SimpleCommandSemanticsContext(
         )
     }
 
-    private fun collectWhenToggleOffEffect(optionRef: OptionRef): Effect {
-        return Effect(
+    private fun collectWhenToggleOffEffect(optionRef: OptionRef): OptionToggleEffect {
+        return OptionToggleEffect(
             include = emptyList(),
             exclude = listOf(optionRef)
         )
     }
 
-    private fun collectWhenToggleOnEffect(optionRef: OptionRef): Effect {
-        return Effect(
-            include = collectIncludedOptions(optionRef),
-            exclude = collectExcludedOptions(optionRef)
+    private fun collectWhenToggleOnEffect(optionRef: OptionRef): OptionToggleEffect {
+        return OptionToggleEffect(
+            include = collectWhenToggleOnIncludeOptions(optionRef),
+            exclude = collectWhenToggleOnExcludeOptions(optionRef)
         )
     }
 
-    private fun collectExcludedOptions(optionRef: OptionRef): List<OptionRef> {
+    private fun collectWhenToggleOnExcludeOptions(optionRef: OptionRef): List<OptionRef> {
         val exclude = mutableListOf<OptionRef>()
         val option = optionsByRef[optionRef]
         option?.sideEffects?.filter { it.effectType == SideEffect.Type.INCLUDE }?.forEach { exclude += it.optionRef }
@@ -75,7 +68,7 @@ class SimpleCommandSemanticsContext(
         return exclude.distinct()
     }
 
-    private fun collectIncludedOptions(optionRef: OptionRef): List<OptionRef> {
+    private fun collectWhenToggleOnIncludeOptions(optionRef: OptionRef): List<OptionRef> {
         val include = mutableListOf(optionRef)
         val option = optionsByRef[optionRef]
         option?.sideEffects?.filter { it.effectType == SideEffect.Type.EXCLUDE }?.forEach { include += it.optionRef }
@@ -89,18 +82,3 @@ class SimpleCommandSemanticsContext(
     }
 }
 
-data class Effect(
-    val include: List<OptionRef>,
-    val exclude: List<OptionRef>
-)
-
-data class OptionSemantics(
-    val optionRef: OptionRef,
-    val whenToggleOn: Effect,
-    val whenToggleOff: Effect
-)
-
-class ComplexCommandSemanticsContext(
-    val command: ComplexCommand,
-    val subcommandsSemantics: Map<String, SimpleCommandSemanticsContext>
-)

@@ -1,7 +1,6 @@
 package ru.nsu.hybrid.cf.evaluator.action
 
 import org.junit.jupiter.api.Test
-import ru.nsu.hybrid.cf.commandDesc.semantics.SemanticsAnalyzer
 import ru.nsu.hybrid.dsl.builder.simpleCommand
 
 class CommandFrameActionsEvaluatorTest {
@@ -73,7 +72,7 @@ class CommandFrameActionsEvaluatorTest {
     val uut = CommandFrameActionsEvaluator()
 
     @Test
-    fun evaluate() {
-        uut.evaluate(ls).also { println(it) }
+    fun commandFrameActions() {
+        uut.commandFrameActions(ls).also { println(it) }
     }
 }

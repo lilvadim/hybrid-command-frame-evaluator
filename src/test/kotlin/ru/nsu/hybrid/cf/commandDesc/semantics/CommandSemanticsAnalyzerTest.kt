@@ -1,14 +1,13 @@
 package ru.nsu.hybrid.cf.commandDesc.semantics
 
 import org.junit.jupiter.api.Test
-import ru.nsu.hybrid.cf.commandDesc.entry.Command
 import ru.nsu.hybrid.cf.commandDesc.entry.SimpleCommand
 import ru.nsu.hybrid.cf.commandDesc.option.OptionRef
 import ru.nsu.hybrid.dsl.builder.simpleCommand
 
-class SemanticsAnalyzerTest {
+class CommandSemanticsAnalyzerTest {
 
-    val uut = SemanticsAnalyzer()
+    val uut = CommandSemanticsAnalyzer()
 
     val lsCommand: SimpleCommand = simpleCommand("ls") {
         entry("Filter") {
