@@ -27,6 +27,7 @@ data class AddOption(
     @JsonRawValue val value: String?,
     val delimiter: String?,
     val words: List<String>?,
+    val unique: Boolean,
 )
 
 data class RemoveOption(

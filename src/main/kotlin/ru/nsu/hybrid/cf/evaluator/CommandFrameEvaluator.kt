@@ -181,6 +181,7 @@ class CommandFrameEvaluator(
                 input(InputType.text, classes = "form-control") {
                     id = identifier(option, Identifier.Suffix.VALUE)
                     placeholder = option.optionVariants.first().arg
+                    onChange = actionMap[ActionDescriptor(identifier(option))] ?: ""
                 }
             }
             option.hasValue -> div("input-group") {
@@ -209,6 +210,7 @@ class CommandFrameEvaluator(
                             +optValue
                         }
                     }
+                    onChange = actionMap[ActionDescriptor(identifier(option))] ?: ""
                 }
             }
             else -> div("form-check") {

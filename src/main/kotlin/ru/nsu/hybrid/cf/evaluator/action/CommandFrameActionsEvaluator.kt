@@ -105,7 +105,8 @@ class CommandFrameActionsEvaluator(
             optionText = it.value,
             words = null,
             delimiter = option.optionVariants.first().delimiter,
-            value = if (option.isReferenced(it)) "$valueExtractorName()" else "undefined"
+            value = if (option.isReferenced(it)) "$valueExtractorName()" else "undefined",
+            unique = true
         )
     }
 
