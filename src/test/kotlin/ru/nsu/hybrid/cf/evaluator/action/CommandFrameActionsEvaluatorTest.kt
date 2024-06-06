@@ -1,7 +1,7 @@
 package ru.nsu.hybrid.cf.evaluator.action
 
 import org.junit.jupiter.api.Test
-import ru.nsu.hybrid.dsl.builder.simpleCommand
+import ru.nsu.hybrid.dsl.api.simpleCommand
 
 class CommandFrameActionsEvaluatorTest {
 

@@ -2,10 +2,10 @@ package ru.nsu.hybrid.dsl.evaluator
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import ru.nsu.hybrid.dsl.builder.simpleCommand
+import ru.nsu.hybrid.dsl.api.simpleCommand
 import java.io.File
 
-class CommandDescriptionEvaluatorTest {
+class CommandSyntaxEvaluatorTest {
 
     val uut = CommandDescriptionEvaluator()
 

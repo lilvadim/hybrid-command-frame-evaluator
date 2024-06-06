@@ -6,7 +6,7 @@ import org.mapstruct.ReportingPolicy
 import org.mapstruct.factory.Mappers
 import ru.nsu.hybrid.cf.commandDesc.entry.*
 import ru.nsu.hybrid.cf.commandDesc.option.Option
-import ru.nsu.hybrid.dsl.builder.*
+import ru.nsu.hybrid.dsl.api.*
 
 @Mapper(
     unmappedSourcePolicy = ReportingPolicy.ERROR,
@@ -17,6 +17,7 @@ abstract class DslMapper {
     @BeanMapping(ignoreUnmappedSourceProperties = ["exclusive", "inclusive", "toggle", "ctx"])
     abstract fun option(optionContext: OptionContext): Option
 
+    @BeanMapping(ignoreUnmappedSourceProperties = ["setType"])
     abstract fun inlineEntry(entryBuilder: SubEntryContext): InlineEntry
 
     abstract fun tabEntry(entryBuilder: SubEntryContext): TabEntry

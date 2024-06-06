@@ -3,7 +3,7 @@ package ru.nsu.hybrid.cf.commandDesc.semantics
 import org.junit.jupiter.api.Test
 import ru.nsu.hybrid.cf.commandDesc.entry.SimpleCommand
 import ru.nsu.hybrid.cf.commandDesc.option.OptionRef
-import ru.nsu.hybrid.dsl.builder.simpleCommand
+import ru.nsu.hybrid.dsl.api.simpleCommand
 
 class CommandSemanticsAnalyzerTest {
 

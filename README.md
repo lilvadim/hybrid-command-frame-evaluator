@@ -4,7 +4,7 @@ A console utility that generates an HTML command frame for the HybridTerm app. T
 
 The tool takes a command description in KotlinScript using DSL:
 ```kotlin
-import ru.nsu.hybrid.dsl.builder.*
+import ru.nsu.hybrid.dsl.api.*
 ```
 Description allows to describe layout of displaying toggles as well as semantics of them.
 

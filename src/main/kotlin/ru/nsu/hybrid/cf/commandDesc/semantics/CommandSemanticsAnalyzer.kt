@@ -9,10 +9,10 @@ import ru.nsu.hybrid.cf.commandDesc.option.OptionSet
 
 class CommandSemanticsAnalyzer {
 
-    private val cache = mutableMapOf<Command, CommandSemanticsContext>()
+    private val cache = mutableMapOf<String, CommandSemanticsContext>()
 
     fun commandSemantics(command: Command): CommandSemanticsContext {
-        return cache.getOrPut(command) {
+        return cache.getOrPut(command.name) {
 
             val optionSets = mutableListOf<OptionSet>()
             val groups = mutableMapOf<String, MutableList<OptionRef>>()

@@ -3,11 +3,10 @@ package ru.nsu.hybrid.cf.evaluator
 import kotlinx.html.*
 import kotlinx.html.dom.createHTMLDocument
 import org.w3c.dom.Document
+import ru.nsu.hybrid.cf.commandDesc.SetType
 import ru.nsu.hybrid.cf.commandDesc.entry.*
-import ru.nsu.hybrid.cf.commandDesc.option.ChoiceOptionSet
 import ru.nsu.hybrid.cf.commandDesc.option.Option
 import ru.nsu.hybrid.cf.commandDesc.option.OptionSet
-import ru.nsu.hybrid.cf.commandDesc.option.ToggleOptionSet
 import ru.nsu.hybrid.cf.evaluator.action.ActionDescriptor
 import ru.nsu.hybrid.cf.evaluator.action.CommandFrameActionsEvaluator
 
@@ -15,21 +14,32 @@ class CommandFrameEvaluator(
     private val actionsEvaluator: CommandFrameActionsEvaluator = CommandFrameActionsEvaluator()
 ) {
     private val actionMap = mutableMapOf<ActionDescriptor, String>()
-
+ 
     fun evaluate(command: Command): Document {
         return createHTMLDocument().html {
             lang = "javascript"
             head { }
             body {
-                script { +initActionsAndGetScriptContext(command) }
+                script {
+                    +initActionsAndGetScriptContext(command)
+                }
+                style {
+                    unsafe {
+                        raw("""
+                            .black-check:checked {
+                                background-color: var(--bs-dark);
+                            }
+                        """.trimIndent())
+                    }
+                }
                 when (command) {
                     is ComplexCommand -> {
                         div {
-                            evaluate(command)
-                            command.subcommands?.forEach { evaluate(it) }
+                            evaluateComplexCommand(command)
+                            command.subcommands?.forEach { evaluateSimpleCommand(it) }
                         }
                     }
-                    is SimpleCommand -> evaluate(command)
+                    is SimpleCommand -> evaluateSimpleCommand(command)
                 }
             }
         }
@@ -41,7 +51,7 @@ class CommandFrameEvaluator(
         return actions.scriptContext
     }
 
-    private fun FlowContent.evaluate(complexCommand: ComplexCommand) {
+    private fun FlowContent.evaluateComplexCommand(complexCommand: ComplexCommand) {
         div("container") {
             id = identifier(complexCommand)
             h2("mono-font-bold") { +complexCommand.name }
@@ -63,12 +73,12 @@ class CommandFrameEvaluator(
                     h3 { +"Options" }
                 }
             }
-            complexCommand.options?.forEach { optionSet -> div("list-group-item") { evaluate(optionSet) } }
-            complexCommand.entries?.forEach { subEntry -> evaluate(subEntry) }
+            complexCommand.options?.forEach { optionSet -> div("list-group-item") { evaluateOptionSet(optionSet) } }
+            complexCommand.entries?.forEach { subEntry -> evaluateSubEntry(subEntry) }
         }
     }
 
-    private fun FlowContent.evaluate(simpleCommand: SimpleCommand) {
+    private fun FlowContent.evaluateSimpleCommand(simpleCommand: SimpleCommand) {
         div {
             id = identifier(simpleCommand)
             if (simpleCommand is SubCommand) {
@@ -87,25 +97,25 @@ class CommandFrameEvaluator(
                 +" "
                 +simpleCommand.name
             }
-            simpleCommand.options?.forEach { optionSet -> div("list-group-item") { evaluate(optionSet) } }
-            simpleCommand.entries?.forEach { evaluate(it) }
+            simpleCommand.options?.forEach { optionSet -> div("list-group-item") { evaluateOptionSet(optionSet) } }
+            simpleCommand.entries?.forEach { evaluateSubEntry(it) }
         }
     }
 
-    private fun FlowContent.evaluate(subEntry: SubEntry) {
-        when (subEntry) {
-            is InlineEntry -> evaluate(subEntry)
-            is TabEntry -> evaluate(subEntry)
+    private fun FlowContent.evaluateSubEntry(subEntry: SubEntry) {
+        when (subEntry.childrenLayout) {
+            ChildrenLayout.INLINE -> evaluateInline(subEntry)
+            ChildrenLayout.TABS -> evaluateTabs(subEntry)
         }
     }
 
-    private fun FlowContent.evaluate(tabEntry: TabEntry) {
+    private fun FlowContent.evaluateTabs(entry: SubEntry) {
         div {
-            h3 { +tabEntry.name }
+            h3 { +entry.name }
             nav {
                 div("nav nav-underline") {
                     role = "tablist"
-                    tabEntry.entries?.forEach { subEntry ->
+                    entry.entries?.forEachIndexed { index, subEntry ->
                         button(classes = "nav-link tab-btn", type = ButtonType.button) {
                             +subEntry.name
                             id = identifier(subEntry, "tab")
@@ -113,63 +123,69 @@ class CommandFrameEvaluator(
                             attributes["data-bs-toggle"] = "tab"
                             attributes["data-bs-target"] = "#" + identifier(subEntry, "tab_pane")
                             attributes["aria-controls"] = identifier(subEntry, "tab_pane")
-                            attributes["aria-selected"] = "false"
+                            attributes["aria-selected"] = if (index == 0) "true" else "false"
+                            if (index == 0) {
+                                classes += "active"
+                            }
                         }
                     }
                 }
             }
             div("tab-content") {
-                tabEntry.entries?.forEach { subEntry ->
+                entry.entries?.forEachIndexed { index, subEntry ->
                     div("tab-pane list-group list-group-flush") {
                         id = identifier(subEntry, "tab_pane")
                         role = "tabpanel"
                         attributes["aria-labelledby"] = identifier(subEntry, "tab")
                         tabIndex = "0"
-                        subEntry.options?.forEach { optionSet -> div("list-group-item") { evaluate(optionSet) } }
-                        subEntry.entries?.forEach { s -> div("list-group-item") { evaluate(s) } }
+                        subEntry.options?.forEach { optionSet -> div("list-group-item") { evaluateOptionSet(optionSet) } }
+                        subEntry.entries?.forEach { s -> div("list-group-item") { evaluateSubEntry(s) } }
+                        if (index == 0) {
+                            classes += setOf("show", "active")
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun FlowContent.evaluate(entry: InlineEntry) {
+    private fun FlowContent.evaluateInline(entry: SubEntry) {
         div {
             h3 { +entry.name }
             div("list-group list-group-flush") {
-                entry.options?.forEach { optionSet -> div("list-group-item") { evaluate(optionSet) } }
-                entry.entries?.forEach { inlineEntry -> div("list-group-item") { evaluate(inlineEntry) } }
+                entry.options?.forEach { optionSet -> div("list-group-item") { evaluateOptionSet(optionSet) } }
+                entry.entries?.forEach { subEntry -> evaluateSubEntry(subEntry) }
             }
         }
     }
 
-    private fun FlowContent.evaluate(optionSet: OptionSet) {
-        when (optionSet) {
-            is ToggleOptionSet -> evaluate(optionSet)
-            is ChoiceOptionSet -> evaluate(optionSet)
+    private fun FlowContent.evaluateOptionSet(optionSet: OptionSet) {
+        when (optionSet.setType) {
+            SetType.ANY -> evaluateAny(optionSet)
+            SetType.ALTERNATE -> evaluateAlternate(optionSet)
         }
     }
 
-    private fun FlowContent.evaluate(optionSet: ToggleOptionSet) {
+    private fun FlowContent.evaluateAny(optionSet: OptionSet) {
         div("list-group list-group-flush") {
             optionSet.forEach { option ->
-                div("list-group-item") {
-                    evaluate(option, optionSet)
+                div("list-group-item border-0") {
+                    evaluateOption(option, optionSet)
                     option.description?.let { text(it) }
                 }
             }
         }
     }
 
-    private fun FlowContent.evaluate(option: Option, optionSet: OptionSet) {
-        val customClass = if (optionSet is ChoiceOptionSet) "radio-check" else ""
+    private fun FlowContent.evaluateOption(option: Option, optionSet: OptionSet) {
+        val customClass = if (optionSet.setType == SetType.ALTERNATE) "radio-check" else ""
         when {
             option.hasValue && option.values.isNullOrEmpty() -> div("input-group") {
                 div("input-group-text") {
                     div("form-check") {
                         label("form-check-label mono-font-bold") {
                             +htmlLabel(option)
-                            input(InputType.checkBox, classes = "form-check-input $customClass") {
+                            input(InputType.checkBox, classes = "form-check-input border-dark black-check $customClass") {
                                 name = identifier(optionSet)
                                 id = identifier(option)
                                 value = ""
@@ -189,7 +205,7 @@ class CommandFrameEvaluator(
                     div("form-check") {
                         label("form-check-label mono-font-bold") {
                             +htmlLabel(option)
-                            input(InputType.checkBox, classes = "form-check-input $customClass") {
+                            input(InputType.checkBox, classes = "form-check-input border-dark black-check $customClass") {
                                 name = identifier(optionSet)
                                 id = identifier(option)
                                 value = ""
@@ -217,7 +233,7 @@ class CommandFrameEvaluator(
                 label("form-check-label mono-font-bold") {
                     htmlFor = identifier(option)
                     +htmlLabel(option)
-                    input(InputType.checkBox, classes = "form-check-input $customClass") {
+                    input(InputType.checkBox, classes = "form-check-input border-dark black-check $customClass") {
                         name = identifier(optionSet)
                         id = identifier(option)
                         value = ""
@@ -228,11 +244,12 @@ class CommandFrameEvaluator(
         }
     }
 
-    private fun FlowContent.evaluate(optionSet: ChoiceOptionSet) {
+    private fun FlowContent.evaluateAlternate(optionSet: OptionSet) {
         div("list-group") {
             optionSet.forEach { option ->
-                div("list-group-item") {
-                    evaluate(option, optionSet)
+                div("list-group-item " +
+                            "border-danger border-3 border-start border-end-0 border-top-0 border-bottom-0 rounded-0") {
+                    evaluateOption(option, optionSet)
                     option.description?.let { text(it) }
                 }
             }

@@ -1,4 +1,4 @@
-import ru.nsu.hybrid.dsl.builder.*
+import ru.nsu.hybrid.dsl.api.*
 
 complexCommand("git") {
     subcommand("commit") {

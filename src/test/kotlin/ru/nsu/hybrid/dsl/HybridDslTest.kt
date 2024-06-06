@@ -3,8 +3,9 @@ package ru.nsu.hybrid.dsl
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import ru.nsu.hybrid.cf.commandDesc.entry.Command
-import ru.nsu.hybrid.dsl.builder.complexCommand
-import ru.nsu.hybrid.dsl.builder.simpleCommand
+import ru.nsu.hybrid.dsl.api.alternate
+import ru.nsu.hybrid.dsl.api.complexCommand
+import ru.nsu.hybrid.dsl.api.simpleCommand
 import kotlin.test.Test
 
 class HybridDslTest {
@@ -87,6 +88,9 @@ class HybridDslTest {
     @Test
     fun sample_complexCommand() {
         complexCommand("git") {
+            tabs(setType = alternate) {
+
+            }
             subcommand("commit") {
                 entry("Sample Tab Entry") {
                     choice {
@@ -107,6 +111,15 @@ class HybridDslTest {
                             inclusive in groups("group1", "group2")
                         }
                         option("-s")
+                    }
+                }
+                tabs("Name is optional on tabs", alternate) {
+                    entry("Sample Tab Entry") {
+                        toggles {
+                            option("-s", "--sample-opt") {
+                                description("Sample option")
+                            }
+                        }
                     }
                 }
             }

@@ -4,7 +4,7 @@
 
 Инструмент принимает на вход описание команды на языке KotlinScript с использованием DSL:
 ```kotlin
-import ru.nsu.hybrid.dsl.builder.* 
+import ru.nsu.hybrid.dsl.api.* 
 ```
 Описание позволяет задать структуру отображения опций и их семантику.
 
@@ -31,6 +31,15 @@ complexCommand("git") { // составная команда git
                     inclusive in groups("group1", "group2") // включить все другие опции в группе при включении этой, альтернативный вариант
                 }
                 option("-s") // самый краткий вариант описания опции
+            }
+            tabs("Name is optional on tabs") { // раздел с подразделами в виде вкладок, наименование можно опустить и использовать tabs { ... }
+                entry("Sample Tab Entry") { 
+                    toggles { // перечисление переключателей опций
+                        option("-s", "--sample-opt") {
+                            description("Sample option")
+                        }
+                    }
+                }
             }
         }
     }

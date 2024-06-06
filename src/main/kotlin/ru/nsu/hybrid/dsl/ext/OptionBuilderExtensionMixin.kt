@@ -1,6 +1,6 @@
 package ru.nsu.hybrid.dsl.ext
 
-import ru.nsu.hybrid.dsl.builder.OptionContext
+import ru.nsu.hybrid.dsl.api.OptionContext
 
 interface OptionBuilderExtensionMixin : DslExtensionMixin<OptionContext> {
     val exclusive

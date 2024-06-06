@@ -1,7 +1,7 @@
 package ru.nsu.hybrid.cf.commandDesc.semantics
 
+import ru.nsu.hybrid.cf.commandDesc.SetType
 import ru.nsu.hybrid.cf.commandDesc.entry.Command
-import ru.nsu.hybrid.cf.commandDesc.option.ChoiceOptionSet
 import ru.nsu.hybrid.cf.commandDesc.option.Option
 import ru.nsu.hybrid.cf.commandDesc.option.OptionRef
 import ru.nsu.hybrid.cf.commandDesc.option.OptionSet
@@ -62,7 +62,7 @@ class CommandSemanticsContext(
             }
         }
         val set = optionSetByRef[optionRef]
-        if (set is ChoiceOptionSet) {
+        if (set?.setType == SetType.ALTERNATE) {
             set.filterNot { it.isReferenced(optionRef) }.map { it.references().first() }.forEach { exclude += it }
         }
         return exclude.distinct()

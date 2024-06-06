@@ -3,15 +3,15 @@ package ru.nsu.hybrid.cf.evaluator.action.apiTypes
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonRawValue
 
-data class CommandOptionDescription(
+data class OptionSyntax(
     val optionSynonyms: List<String>,
     val hasValue: Boolean
 )
 
-data class CommandDescription(
+data class CommandSyntax(
     val command: String,
     val subcommands: List<String>?,
-    val options: List<CommandOptionDescription>
+    val options: List<OptionSyntax>
 )
 
 enum class OptionType {
@@ -40,4 +40,19 @@ data class UpdateOptionsParameters(
     val removeOptions: List<RemoveOption>
 )
 
+data class CommandSemantic(
+    val command: String,
+    val options: List<OptionSemantic>
+)
+
+data class OptionSemantic(
+    val option: String,
+    val whenAdded: Effect,
+    val whenRemoved: Effect
+)
+
+data class Effect(
+    val add: List<AddOption>,
+    val remove: List<RemoveOption>
+)
 

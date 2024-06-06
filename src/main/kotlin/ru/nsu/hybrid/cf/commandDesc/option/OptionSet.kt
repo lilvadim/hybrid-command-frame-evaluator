@@ -1,11 +1,8 @@
 package ru.nsu.hybrid.cf.commandDesc.option
 
-sealed class OptionSet(set: Set<Option>) : Set<Option> by set
+import ru.nsu.hybrid.cf.commandDesc.SetType
 
-class ToggleOptionSet(
-    set: Set<Option>
-) : OptionSet(set)
-
-class ChoiceOptionSet(
-    set: Set<Option>
-) : OptionSet(set)
+class OptionSet(
+    val set: Set<Option>,
+    val setType: SetType,
+) : Set<Option> by set

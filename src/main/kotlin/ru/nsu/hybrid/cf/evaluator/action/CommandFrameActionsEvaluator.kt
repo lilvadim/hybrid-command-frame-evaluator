@@ -80,7 +80,7 @@ class CommandFrameActionsEvaluator(
             inputId
         )
 
-        return Pair("$handlerName(event)", script)
+        return Pair("$handlerName()", script)
     }
 
     private fun mapRemoveOptions(
@@ -116,14 +116,17 @@ class CommandFrameActionsEvaluator(
         val optionRefsToHtmlId = semantics.optionsByRef.mapKeys { it.key.value }.mapValues { identifier(it.value) }
         val idMapVarName = identifier(semantics.command, Identifier.Suffix.ID_MAP)
         val descriptionVarName = identifier(semantics.command, Identifier.Suffix.DESC)
-        val description = apiTypesMapper.toCommandDescription(semantics.command)
+        val description = apiTypesMapper.toCommandSyntax(semantics.command)
+        val semanticVarName = identifier(semantics.command, Identifier.Suffix.SEMANTIC)
+        val semantic = apiTypesMapper.toSemantic(semantics)
         return jsTemplateBuilder.initIdMap(idMapVarName, optionRefsToHtmlId) +
-                jsTemplateBuilder.initDescription(descriptionVarName, description) +
-                jsTemplateBuilder.addSyncListener(idMapVarName, descriptionVarName)
+                jsTemplateBuilder.initSyntax(descriptionVarName, description) +
+                jsTemplateBuilder.initSemantic(semanticVarName, semantic) +
+                jsTemplateBuilder.addSyncListener(idMapVarName, descriptionVarName, semanticVarName)
     }
 
     private fun removeSubCommandHandle(subCommand: SubCommand): String =
-        "window.hybrid.terminal.removeSubcommandArg('${subCommand.name}')"
+        "window.hybrid.terminal.removeSubcommandAndRest('${subCommand.name}')"
 
     private fun subCommandHandle(subCommand: SubCommand): String =
         "window.hybrid.terminal.insertLastArg('${subCommand.name}')"

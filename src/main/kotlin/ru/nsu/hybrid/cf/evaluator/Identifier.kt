@@ -1,16 +1,18 @@
 package ru.nsu.hybrid.cf.evaluator
 
+import ru.nsu.hybrid.cf.commandDesc.SetType
 import ru.nsu.hybrid.cf.commandDesc.entry.Command
 import ru.nsu.hybrid.cf.commandDesc.entry.SubEntry
-import ru.nsu.hybrid.cf.commandDesc.option.ChoiceOptionSet
 import ru.nsu.hybrid.cf.commandDesc.option.Option
-import ru.nsu.hybrid.cf.commandDesc.option.ToggleOptionSet
+import ru.nsu.hybrid.cf.commandDesc.option.OptionSet
 
 fun identifier(value: Any, suffix: String = ""): String {
     val id = when (value) {
         is Option -> Identifier.Prefix.OPTION + value.hashCode().toString()
-        is ToggleOptionSet -> Identifier.Prefix.TOGGLES_OPTION_SET + value.hashCode().toString()
-        is ChoiceOptionSet -> Identifier.Prefix.CHOICE_OPTION_SET + value.hashCode().toString()
+        is OptionSet -> when (value.setType) {
+            SetType.ANY -> Identifier.Prefix.TOGGLES_OPTION_SET + value.hashCode().toString()
+            SetType.ALTERNATE -> Identifier.Prefix.CHOICE_OPTION_SET + value.hashCode().toString()
+        }
         is SubEntry -> Identifier.Prefix.SUB_ENTRY + value.hashCode().toString()
         is Command -> Identifier.Prefix.COMMAND + value.name
         else -> throw IllegalArgumentException()
@@ -25,6 +27,7 @@ fun commandIdentifier(commandName: String, suffix: String = ""): String {
 
 object Identifier {
     object Suffix {
+        const val SEMANTIC: String = "semantic"
         const val VALUE: String = "value"
         const val HANDLER: String = "handler"
         const val DESC = "desc"

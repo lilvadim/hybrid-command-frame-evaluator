@@ -3,7 +3,8 @@ package ru.nsu.hybrid.cf.evaluator.action
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import ru.nsu.hybrid.cf.evaluator.Identifier
-import ru.nsu.hybrid.cf.evaluator.action.apiTypes.CommandDescription
+import ru.nsu.hybrid.cf.evaluator.action.apiTypes.CommandSemantic
+import ru.nsu.hybrid.cf.evaluator.action.apiTypes.CommandSyntax
 import ru.nsu.hybrid.cf.evaluator.action.apiTypes.UpdateOptionsParameters
 
 class JsTemplateBuilder(
@@ -11,49 +12,53 @@ class JsTemplateBuilder(
 ) {
     fun addSyncListener(
         idMapVarName: String,
-        descriptionVarName: String,
+        syntaxVarName: String,
+        semanticVarName: String
     ): String = """
+        window.hybrid.commandInfo.addSyntax($syntaxVarName);
+        window.hybrid.commandInfo.addSemantic($semanticVarName);
         window.hybrid.terminal.onCommandLineSync((e) => {
-            if (!e.commandLine) {
+            if (!e.commandLine || e.commandLine.command.command !== $syntaxVarName.command) {
                 return;
             }
             var options = e.commandLine.command.options;
-            Object.values($idMapVarName).forEach((id) => {
-                var input = document.getElementById(id);
-                window.hybrid.utils.toggleOff(input);
-            });
+            Object.values($idMapVarName).forEach((id) => window.hybrid.uiUtils.toggleOff(id));
             options.forEach((opt) => {
                 if (opt.option.type === 'UNIX' && opt.option.words) {
                     opt.option.words?.forEach((w) => {
-                        var input = document.getElementById($idMapVarName[opt.option.prefix + w]);
-                        window.hybrid.utils.toggleOn(input);
+                        window.hybrid.uiUtils.toggleOn($idMapVarName[opt.option.prefix + w]);
                         if (opt.value) {
-                            var inputValue = document.getElementById($idMapVarName[opt.option.prefix + w] + '_${Identifier.Suffix.VALUE}');
-                            window.hybrid.utils.setValue(inputValue, opt.value);
+                            window.hybrid.uiUtils.setValue(
+                                $idMapVarName[opt.option.prefix + w] + '_${Identifier.Suffix.VALUE}',
+                                opt.value
+                            );
                         }
                     });
                 } else {
-                    var input = document.getElementById($idMapVarName[opt.option.option]);
-                    window.hybrid.utils.toggleOn(input);
+                    window.hybrid.uiUtils.toggleOn($idMapVarName[opt.option.option]);
                     if (opt.value) {
-                        var inputValue = document.getElementById($idMapVarName[opt.option.option] + '_${Identifier.Suffix.VALUE}');
-                        window.hybrid.utils.setValue(inputValue, opt.value);
+                        window.hybrid.uiUtils.setValue(
+                            $idMapVarName[opt.option.option] + '_${Identifier.Suffix.VALUE}', 
+                            opt.value
+                        );
                     }
                 }
             });
             
-            var util = window.hybrid.getCommandLineUtil($descriptionVarName);
-            var subcommand = util.getSubcommand(e.commandLine.command);
+            var syntaxHelper = window.hybrid.getCommandSyntaxHelper(e.commandLine.command.command);
+            if (!syntaxHelper) {
+                return;
+            }
+            var subcommand = syntaxHelper.getSubcommand(e.commandLine.command);
             var commandFrameId = '${Identifier.Prefix.COMMAND}' + e.commandLine.command.command;
             if (!subcommand) {
-                window.hybrid.utils.show(commandFrameId);
-                Object.values($descriptionVarName.subcommands).forEach((sc) => {
-                    window.hybrid.utils.hide('${Identifier.Prefix.COMMAND}' + sc);
-                });
+                window.hybrid.uiUtils.show(commandFrameId);
+                Object.values($syntaxVarName.subcommands).forEach((sc) => 
+                    window.hybrid.uiUtils.hide('${Identifier.Prefix.COMMAND}' + sc));
             } else {
                 var subcommandFrameId = '${Identifier.Prefix.COMMAND}' + subcommand;
-                window.hybrid.utils.hide(commandFrameId);
-                window.hybrid.utils.show(subcommandFrameId);
+                window.hybrid.uiUtils.hide(commandFrameId);
+                window.hybrid.uiUtils.show(subcommandFrameId);
             }
         });
     """.trimIndent() + "\n"
@@ -65,11 +70,18 @@ class JsTemplateBuilder(
         var $idMapVarName = ${objectMapper.writeValueAsString(optionRefsToHtmlId)};
     """.trimIndent() + "\n"
 
-    fun initDescription(
-        descriptionVarName: String,
-        description: CommandDescription
+    fun initSyntax(
+        syntaxVarName: String,
+        commandSyntax: CommandSyntax
     ): String = """
-        var $descriptionVarName = ${objectMapper.writeValueAsString(description)};
+        var $syntaxVarName = ${objectMapper.writeValueAsString(commandSyntax)};
+    """.trimIndent() + "\n"
+
+    fun initSemantic(
+        semanticVarName: String,
+        semantic: CommandSemantic
+    ): String = """
+        var $semanticVarName = ${objectMapper.writeValueAsString(semantic)};
     """.trimIndent() + "\n"
 
     fun handlerDef(
@@ -80,7 +92,7 @@ class JsTemplateBuilder(
         valueExtractorName: String,
         inputId: String
     ) = """
-        function $handlerName(event) {
+        function $handlerName() {
             var data = document.getElementById('${optionId}').checked;
             if (data) {
                 window.hybrid.terminal.updateOptions(${objectMapper.writeValueAsString(updateOptionsWhenToggleOn)});

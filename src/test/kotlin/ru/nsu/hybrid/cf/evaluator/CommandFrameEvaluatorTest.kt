@@ -2,7 +2,7 @@ package ru.nsu.hybrid.cf.evaluator
 
 import kotlinx.html.dom.serialize
 import org.junit.jupiter.api.Test
-import ru.nsu.hybrid.dsl.builder.simpleCommand
+import ru.nsu.hybrid.dsl.api.simpleCommand
 
 class CommandFrameEvaluatorTest {
 

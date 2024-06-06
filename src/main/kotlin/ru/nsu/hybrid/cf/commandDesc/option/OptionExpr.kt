@@ -24,7 +24,7 @@ data class OptionExpr(
 
     private fun delimiter(): String = value.replace(OptionFormat.optionArg, "").lastOrNull {
         isOptionValueSeparator(it.toString())
-    }?.toString() ?: " "
+    }?.toString() ?: ""
 
     private fun pattern(): String = value.replace(OptionFormat.optionArg, "").trimEnd()
 

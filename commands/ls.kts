@@ -1,4 +1,4 @@
-import ru.nsu.hybrid.dsl.builder.*
+import ru.nsu.hybrid.dsl.api.*
 
 simpleCommand("ls") {
     tabs {
@@ -111,7 +111,7 @@ simpleCommand("ls") {
                     )
                     exclusive in "foo"
                 }
-                option("-w <width>") {
+                option("-w<width>") {
                     description("Set output width to the number of columns. 0 means no limit")
                 }
             }

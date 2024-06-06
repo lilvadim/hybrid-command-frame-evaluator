@@ -1,10 +1,13 @@
-package ru.nsu.hybrid.dsl.builder
+package ru.nsu.hybrid.dsl.api
 
+import ru.nsu.hybrid.cf.commandDesc.SetType
 import ru.nsu.hybrid.cf.commandDesc.entry.ComplexCommand
 import ru.nsu.hybrid.cf.commandDesc.entry.SimpleCommand
 import ru.nsu.hybrid.cf.commandDesc.entry.SubCommand
 import ru.nsu.hybrid.cf.commandDesc.entry.SubEntry
-import ru.nsu.hybrid.cf.commandDesc.option.*
+import ru.nsu.hybrid.cf.commandDesc.option.Option
+import ru.nsu.hybrid.cf.commandDesc.option.OptionExpr
+import ru.nsu.hybrid.cf.commandDesc.option.OptionSet
 import ru.nsu.hybrid.cf.commandDesc.option.effect.SideEffect
 import ru.nsu.hybrid.dsl.ext.OptionBuilderExtensionMixin
 import ru.nsu.hybrid.dsl.mapper.DslMapper
@@ -74,12 +77,12 @@ abstract class EntryContext(
 
     fun choice(config: OptionSetContext.() -> Unit) {
         val context = OptionSetContext().apply(config)
-        options += ChoiceOptionSet(context)
+        options += OptionSet(context, SetType.ALTERNATE)
     }
 
     fun toggles(config: OptionSetContext.() -> Unit) {
         val context = OptionSetContext().apply(config)
-        options += ToggleOptionSet(context)
+        options += OptionSet(context, SetType.ANY)
     }
 }
 
@@ -92,18 +95,25 @@ open class OptionSetContext(val set: MutableSet<Option> = mutableSetOf()) : Muta
     }
 }
 
+val alternate = SetType.ALTERNATE
+val any = SetType.ANY
+
 @HybridDsl
-open class SubEntryContext(name: String) : EntryContext(name) {
+open class SubEntryContext(name: String, var setType: SetType) : EntryContext(name) {
     val entries: MutableList<SubEntry> = mutableListOf()
 
+    fun alternate() {
+        setType = SetType.ALTERNATE
+    }
+
     fun entry(name: String, config: SubEntryContext.() -> Unit) {
-        val context = SubEntryContext(name).apply(config)
+        val context = SubEntryContext(name, SetType.ANY).apply(config)
         val entry = DslMapper.instance.inlineEntry(context)
         entries += entry
     }
 
-    fun tabs(name: String = "", config: SubEntryContext.() -> Unit) {
-        val context = SubEntryContext(name).apply(config)
+    fun tabs(name: String = "", setType: SetType = SetType.ANY, config: SubEntryContext.() -> Unit) {
+        val context = SubEntryContext(name, setType).apply(config)
         val tabEntry = DslMapper.instance.tabEntry(context)
         entries += tabEntry
     }
@@ -113,14 +123,14 @@ open class SubEntryContext(name: String) : EntryContext(name) {
 open class CommandContext(name: String) : EntryContext(name) {
     val entries: MutableList<SubEntry> = mutableListOf()
 
-    fun tabs(name: String = "", config: SubEntryContext.() -> Unit) {
-        val context = SubEntryContext(name).apply(config)
+    fun tabs(name: String = "", setType: SetType = SetType.ANY, config: SubEntryContext.() -> Unit) {
+        val context = SubEntryContext(name, setType).apply(config)
         val tabEntry = DslMapper.instance.tabEntry(context)
         entries += tabEntry
     }
 
     fun entry(name: String, config: SubEntryContext.() -> Unit) {
-        val context = SubEntryContext(name).apply(config)
+        val context = SubEntryContext(name, SetType.ANY).apply(config)
         val inlineEntry = DslMapper.instance.inlineEntry(context)
         entries += inlineEntry
     }
