@@ -48,7 +48,15 @@ class CommandFrameEvaluator(
     private fun initActionsAndGetScriptContext(command: Command): String {
         val actions = actionsEvaluator.commandFrameActions(command)
         actionMap.putAll(actions.actionMap)
-        return actions.scriptContext
+        var scriptContext = actions.scriptContext
+        if (command is ComplexCommand) {
+            command.subcommands?.forEach {
+                val subcommandActions = actionsEvaluator.commandFrameActions(it)
+                actionMap.putAll(subcommandActions.actionMap)
+                scriptContext += subcommandActions.scriptContext
+            }
+        }
+        return scriptContext
     }
 
     private fun FlowContent.evaluateComplexCommand(complexCommand: ComplexCommand) {
@@ -64,7 +72,7 @@ class CommandFrameEvaluator(
                 complexCommand.subcommands?.forEach { subcommand ->
                     button(classes = "list-group-item") {
                         p("mono-font-bold") { +subcommand.name }
-                        onClick = actionMap[ActionDescriptor(identifier(subcommand))] ?: ""
+                        onClick = actionMap[ActionDescriptor(identifier(subcommand, Identifier.Suffix.SHOW))] ?: ""
                     }
                 }
             }
@@ -90,7 +98,8 @@ class CommandFrameEvaluator(
                     a(href = "#") {
                         +simpleCommand.parentCommandName
                         onClick = actionMap[ActionDescriptor(commandIdentifier(
-                            simpleCommand.parentCommandName, simpleCommand.name
+                            simpleCommand.parentCommandName + "_" + simpleCommand.name,
+                            Identifier.Suffix.HIDE
                         ))] ?: ""
                     }
                 }
@@ -118,11 +127,11 @@ class CommandFrameEvaluator(
                     entry.entries?.forEachIndexed { index, subEntry ->
                         button(classes = "nav-link tab-btn", type = ButtonType.button) {
                             +subEntry.name
-                            id = identifier(subEntry, "tab")
+                            id = identifier(subEntry, Identifier.Suffix.TAB)
                             role = "tab"
                             attributes["data-bs-toggle"] = "tab"
-                            attributes["data-bs-target"] = "#" + identifier(subEntry, "tab_pane")
-                            attributes["aria-controls"] = identifier(subEntry, "tab_pane")
+                            attributes["data-bs-target"] = "#" + identifier(subEntry, Identifier.Suffix.TAB_PANE)
+                            attributes["aria-controls"] = identifier(subEntry, Identifier.Suffix.TAB_PANE)
                             attributes["aria-selected"] = if (index == 0) "true" else "false"
                             if (index == 0) {
                                 classes += "active"
@@ -134,9 +143,9 @@ class CommandFrameEvaluator(
             div("tab-content") {
                 entry.entries?.forEachIndexed { index, subEntry ->
                     div("tab-pane list-group list-group-flush") {
-                        id = identifier(subEntry, "tab_pane")
+                        id = identifier(subEntry, Identifier.Suffix.TAB_PANE)
                         role = "tabpanel"
-                        attributes["aria-labelledby"] = identifier(subEntry, "tab")
+                        attributes["aria-labelledby"] = identifier(subEntry, Identifier.Suffix.TAB)
                         tabIndex = "0"
                         subEntry.options?.forEach { optionSet -> div("list-group-item") { evaluateOptionSet(optionSet) } }
                         subEntry.entries?.forEach { s -> div("list-group-item") { evaluateSubEntry(s) } }

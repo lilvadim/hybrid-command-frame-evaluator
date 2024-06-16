@@ -2,6 +2,7 @@ package ru.nsu.hybrid.cf.evaluator
 
 import ru.nsu.hybrid.cf.commandDesc.SetType
 import ru.nsu.hybrid.cf.commandDesc.entry.Command
+import ru.nsu.hybrid.cf.commandDesc.entry.SubCommand
 import ru.nsu.hybrid.cf.commandDesc.entry.SubEntry
 import ru.nsu.hybrid.cf.commandDesc.option.Option
 import ru.nsu.hybrid.cf.commandDesc.option.OptionSet
@@ -14,6 +15,7 @@ fun identifier(value: Any, suffix: String = ""): String {
             SetType.ALTERNATE -> Identifier.Prefix.CHOICE_OPTION_SET + value.hashCode().toString()
         }
         is SubEntry -> Identifier.Prefix.SUB_ENTRY + value.hashCode().toString()
+        is SubCommand -> Identifier.Prefix.COMMAND + value.parentCommandName + "_" + value.name
         is Command -> Identifier.Prefix.COMMAND + value.name
         else -> throw IllegalArgumentException()
     }
@@ -27,11 +29,15 @@ fun commandIdentifier(commandName: String, suffix: String = ""): String {
 
 object Identifier {
     object Suffix {
+        const val TAB_PANE: String = "tab_pane"
+        const val TAB: String = "tab"
         const val SEMANTIC: String = "semantic"
         const val VALUE: String = "value"
         const val HANDLER: String = "handler"
-        const val DESC = "desc"
+        const val SYNTAX = "syntax"
         const val ID_MAP = "id_map"
+        const val SHOW = "show"
+        const val HIDE = "hide"
     }
 
     object Prefix {

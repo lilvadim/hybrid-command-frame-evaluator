@@ -14,6 +14,7 @@ import ru.nsu.hybrid.cf.evaluator.action.apiTypes.OptionType
 import ru.nsu.hybrid.cf.evaluator.action.apiTypes.RemoveOption
 import ru.nsu.hybrid.cf.evaluator.action.apiTypes.UpdateOptionsParameters
 import ru.nsu.hybrid.cf.evaluator.action.apiTypes.mapper.ApiTypesMapper
+import ru.nsu.hybrid.cf.evaluator.commandIdentifier
 import ru.nsu.hybrid.cf.evaluator.identifier
 
 
@@ -38,9 +39,9 @@ class CommandFrameActionsEvaluator(
         if (command is ComplexCommand) {
             for (subCommand in command.subcommands ?: emptyList()) {
                 val handle = subCommandHandle(subCommand)
-                actionMap[ActionDescriptor(identifier(subCommand))] = handle
+                actionMap[ActionDescriptor(identifier(subCommand, Identifier.Suffix.SHOW))] = handle
                 val handleRemove = removeSubCommandHandle(subCommand)
-                actionMap[ActionDescriptor(identifier(command, subCommand.name))] = handleRemove
+                actionMap[ActionDescriptor(identifier(subCommand, Identifier.Suffix.HIDE))] = handleRemove
             }
         }
 
@@ -105,7 +106,7 @@ class CommandFrameActionsEvaluator(
             optionText = it.value,
             words = null,
             delimiter = option.optionVariants.first().delimiter,
-            value = if (option.isReferenced(it)) "$valueExtractorName()" else "undefined",
+            value = if (option.isReferenced(it)) "$valueExtractorName()" else "null",
             unique = true
         )
     }
@@ -115,14 +116,25 @@ class CommandFrameActionsEvaluator(
     ): String {
         val optionRefsToHtmlId = semantics.optionsByRef.mapKeys { it.key.value }.mapValues { identifier(it.value) }
         val idMapVarName = identifier(semantics.command, Identifier.Suffix.ID_MAP)
-        val descriptionVarName = identifier(semantics.command, Identifier.Suffix.DESC)
-        val description = apiTypesMapper.toCommandSyntax(semantics.command)
+        val syntaxVarName = identifier(semantics.command, Identifier.Suffix.SYNTAX)
+        val syntax = apiTypesMapper.toCommandSyntax(semantics.command)
         val semanticVarName = identifier(semantics.command, Identifier.Suffix.SEMANTIC)
         val semantic = apiTypesMapper.toSemantic(semantics)
-        return jsTemplateBuilder.initIdMap(idMapVarName, optionRefsToHtmlId) +
-                jsTemplateBuilder.initSyntax(descriptionVarName, description) +
+
+        val syncListener = if (semantics.command is SubCommand) {
+            val command = semantics.command
+            val parentSyntaxVarName =
+                commandIdentifier(command.parentCommandName, Identifier.Suffix.SYNTAX)
+            jsTemplateBuilder
+                .addSubcommandSyncListener(idMapVarName, syntaxVarName, semanticVarName, parentSyntaxVarName)
+        } else {
+            jsTemplateBuilder.addSyncListener(idMapVarName, syntaxVarName, semanticVarName)
+        }
+
+        return "\n" + jsTemplateBuilder.initIdMap(idMapVarName, optionRefsToHtmlId) +
+                jsTemplateBuilder.initSyntax(syntaxVarName, syntax) +
                 jsTemplateBuilder.initSemantic(semanticVarName, semantic) +
-                jsTemplateBuilder.addSyncListener(idMapVarName, descriptionVarName, semanticVarName)
+                syncListener
     }
 
     private fun removeSubCommandHandle(subCommand: SubCommand): String =

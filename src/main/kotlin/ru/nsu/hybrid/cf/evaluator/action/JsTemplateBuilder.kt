@@ -13,14 +13,18 @@ class JsTemplateBuilder(
     fun addSyncListener(
         idMapVarName: String,
         syntaxVarName: String,
-        semanticVarName: String
+        semanticVarName: String,
     ): String = """
         window.hybrid.commandInfo.addSyntax($syntaxVarName);
         window.hybrid.commandInfo.addSemantic($semanticVarName);
         window.hybrid.terminal.onCommandLineSync((e) => {
-            if (!e.commandLine || e.commandLine.command.command !== $syntaxVarName.command) {
+            if (!e.commandLine) {
                 return;
             }
+            if (e.commandLine.command.command !== $syntaxVarName.command) {
+                return;
+            }
+            
             var options = e.commandLine.command.options;
             Object.values($idMapVarName).forEach((id) => window.hybrid.uiUtils.toggleOff(id));
             options.forEach((opt) => {
@@ -45,7 +49,7 @@ class JsTemplateBuilder(
                 }
             });
             
-            var syntaxHelper = window.hybrid.getCommandSyntaxHelper(e.commandLine.command.command);
+            var syntaxHelper = window.hybrid.getCommandSyntaxHelper($syntaxVarName);
             if (!syntaxHelper) {
                 return;
             }
@@ -54,12 +58,96 @@ class JsTemplateBuilder(
             if (!subcommand) {
                 window.hybrid.uiUtils.show(commandFrameId);
                 Object.values($syntaxVarName.subcommands).forEach((sc) => 
-                    window.hybrid.uiUtils.hide('${Identifier.Prefix.COMMAND}' + sc));
+                    window.hybrid.uiUtils.hide('${Identifier.Prefix.COMMAND}' + e.commandLine.command.command + '_' + sc));
             } else {
-                var subcommandFrameId = '${Identifier.Prefix.COMMAND}' + subcommand;
+                var subcommandFrameId = '${Identifier.Prefix.COMMAND}' + e.commandLine.command.command + '_' + subcommand;
                 window.hybrid.uiUtils.hide(commandFrameId);
                 window.hybrid.uiUtils.show(subcommandFrameId);
             }
+            
+            if (!e.oldCommandLine) {
+                return;
+            }
+            var oldOptionsTextArr = e.oldCommandLine.command.options.map((it) => it.option.option);
+            var addedOptions = 
+                e.commandLine.command.options.filter((it) => !oldOptionsTextArr.includes(it.option.option));
+            if (!addedOptions.length) { 
+                return; 
+            }
+            var lastAddedOption = addedOptions[addedOptions.length - 1];
+            var lastAddedOptionInputId = $idMapVarName[lastAddedOption.option.option];
+            var tabPane = document.getElementById(lastAddedOptionInputId)?.closest('div[role="tabpanel"]');
+            if (!tabPane) { 
+                return;
+            }
+            var tabId = tabPane.getAttribute('aria-labelledby');
+            window.hybrid.uiUtils.showTab(tabId);
+        });
+    """.trimIndent() + "\n"
+
+    fun addSubcommandSyncListener(
+        idMapVarName: String,
+        syntaxVarName: String,
+        semanticVarName: String,
+        parentSyntaxVarName: String
+    ): String = """
+        window.hybrid.commandInfo.addSyntax($syntaxVarName);
+        window.hybrid.commandInfo.addSemantic($semanticVarName);
+        window.hybrid.terminal.onCommandLineSync((e) => {
+            if (!e.commandLine) {
+                return;
+            }
+            var syntaxHelper = window.hybrid.getCommandSyntaxHelper($parentSyntaxVarName);
+            if (!syntaxHelper) {
+                return;
+            }
+            var subcommand = syntaxHelper.getSubcommand(e.commandLine.command);
+            var commandName = subcommand ? e.commandLine.command.command + ' ' + subcommand : e.commandLine.command.command;
+            if (commandName !== $syntaxVarName.command) {
+                return;
+            }
+            
+            var options = e.commandLine.command.options;
+            Object.values($idMapVarName).forEach((id) => window.hybrid.uiUtils.toggleOff(id));
+            options.forEach((opt) => {
+                if (opt.option.type === 'UNIX' && opt.option.words) {
+                    opt.option.words?.forEach((w) => {
+                        window.hybrid.uiUtils.toggleOn($idMapVarName[opt.option.prefix + w]);
+                        if (opt.value) {
+                            window.hybrid.uiUtils.setValue(
+                                $idMapVarName[opt.option.prefix + w] + '_${Identifier.Suffix.VALUE}',
+                                opt.value
+                            );
+                        }
+                    });
+                } else {
+                    window.hybrid.uiUtils.toggleOn($idMapVarName[opt.option.option]);
+                    if (opt.value) {
+                        window.hybrid.uiUtils.setValue(
+                            $idMapVarName[opt.option.option] + '_${Identifier.Suffix.VALUE}', 
+                            opt.value
+                        );
+                    }
+                }
+            });
+            
+            if (!e.oldCommandLine) {
+                return;
+            }
+            var oldOptionsTextArr = e.oldCommandLine.command.options.map((it) => it.option.option);
+            var addedOptions = 
+                e.commandLine.command.options.filter((it) => !oldOptionsTextArr.includes(it.option.option));
+            if (!addedOptions.length) { 
+                return; 
+            }
+            var lastAddedOption = addedOptions[addedOptions.length - 1];
+            var lastAddedOptionInputId = $idMapVarName[lastAddedOption.option.option];
+            var tabPane = document.getElementById(lastAddedOptionInputId)?.closest('div[role="tabpanel"]');
+            if (!tabPane) { 
+                return;
+            }
+            var tabId = tabPane.getAttribute('aria-labelledby');
+            window.hybrid.uiUtils.showTab(tabId);
         });
     """.trimIndent() + "\n"
 

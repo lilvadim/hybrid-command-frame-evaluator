@@ -1,7 +1,6 @@
 package ru.nsu.hybrid.cf.commandDesc.semantics
 
 import ru.nsu.hybrid.cf.commandDesc.entry.Command
-import ru.nsu.hybrid.cf.commandDesc.entry.ComplexCommand
 import ru.nsu.hybrid.cf.commandDesc.entry.Entry
 import ru.nsu.hybrid.cf.commandDesc.entry.traverse
 import ru.nsu.hybrid.cf.commandDesc.option.OptionRef
@@ -18,12 +17,6 @@ class CommandSemanticsAnalyzer {
             val groups = mutableMapOf<String, MutableList<OptionRef>>()
 
             traverse(command) { entry -> collectOptionsInfo(entry, optionSets, groups) }
-
-            if (command is ComplexCommand) {
-                command.subcommands?.forEach { subcommand ->
-                    traverse(subcommand) { entry -> collectOptionsInfo(entry, optionSets, groups) }
-                }
-            }
 
             CommandSemanticsContext(command, groups, optionSets)
         }
