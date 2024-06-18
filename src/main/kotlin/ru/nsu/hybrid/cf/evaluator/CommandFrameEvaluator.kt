@@ -124,7 +124,7 @@ class CommandFrameEvaluator(
             nav {
                 div("nav nav-underline") {
                     role = "tablist"
-                    entry.entries?.forEachIndexed { index, subEntry ->
+                    entry.entries?.forEach { subEntry ->
                         button(classes = "nav-link tab-btn", type = ButtonType.button) {
                             +subEntry.name
                             id = identifier(subEntry, Identifier.Suffix.TAB)
@@ -132,16 +132,13 @@ class CommandFrameEvaluator(
                             attributes["data-bs-toggle"] = "tab"
                             attributes["data-bs-target"] = "#" + identifier(subEntry, Identifier.Suffix.TAB_PANE)
                             attributes["aria-controls"] = identifier(subEntry, Identifier.Suffix.TAB_PANE)
-                            attributes["aria-selected"] = if (index == 0) "true" else "false"
-                            if (index == 0) {
-                                classes += "active"
-                            }
+                            attributes["aria-selected"] = "false"
                         }
                     }
                 }
             }
             div("tab-content") {
-                entry.entries?.forEachIndexed { index, subEntry ->
+                entry.entries?.forEach { subEntry ->
                     div("tab-pane list-group list-group-flush") {
                         id = identifier(subEntry, Identifier.Suffix.TAB_PANE)
                         role = "tabpanel"
@@ -149,9 +146,6 @@ class CommandFrameEvaluator(
                         tabIndex = "0"
                         subEntry.options?.forEach { optionSet -> div("list-group-item") { evaluateOptionSet(optionSet) } }
                         subEntry.entries?.forEach { s -> div("list-group-item") { evaluateSubEntry(s) } }
-                        if (index == 0) {
-                            classes += setOf("show", "active")
-                        }
                     }
                 }
             }
