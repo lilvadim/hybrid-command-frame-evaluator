@@ -139,7 +139,7 @@ class CommandFrameEvaluator(
             }
             div("tab-content") {
                 entry.entries?.forEach { subEntry ->
-                    div("tab-pane list-group list-group-flush") {
+                    div("tab-pane") {
                         id = identifier(subEntry, Identifier.Suffix.TAB_PANE)
                         role = "tabpanel"
                         attributes["aria-labelledby"] = identifier(subEntry, Identifier.Suffix.TAB)
@@ -155,10 +155,8 @@ class CommandFrameEvaluator(
     private fun FlowContent.evaluateInline(entry: SubEntry) {
         div {
             h3 { +entry.name }
-            div("list-group list-group-flush") {
-                entry.options?.forEach { optionSet -> div("list-group-item") { evaluateOptionSet(optionSet) } }
-                entry.entries?.forEach { subEntry -> evaluateSubEntry(subEntry) }
-            }
+            entry.options?.forEach { optionSet -> div("list-group-item") { evaluateOptionSet(optionSet) } }
+            entry.entries?.forEach { subEntry -> evaluateSubEntry(subEntry) }
         }
     }
 
@@ -248,7 +246,7 @@ class CommandFrameEvaluator(
     }
 
     private fun FlowContent.evaluateAlternate(optionSet: OptionSet) {
-        div("list-group") {
+        div("list-group my-2") {
             optionSet.forEach { option ->
                 div("list-group-item " +
                             "border-danger border-3 border-start border-end-0 border-top-0 border-bottom-0 rounded-0") {

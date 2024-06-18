@@ -16,7 +16,7 @@ class CommandDescriptionEvaluator {
         val engine = ScriptEngineManager().getEngineByExtension(extension)
         return try { engine.eval(file.reader()) as Command } catch (e: ScriptException) {
             System.err.println("""
-                ${file.name}: Error at line ${e.lineNumber}
+                ${file.name}:  
                 ${e.message}
             """.trimIndent())
             exitProcess(1)
