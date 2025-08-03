@@ -1,6 +1,14 @@
 # Hybrid Command Frame Evaluator
 
+> This software is a part of IT Bachelor Diploma Qualifying Work
+
 A console utility that generates an HTML command frame for the HybridTerm app. The JavaScript scripts in the generated frames use the Hybrid API, provided by HybridTerm through the `window.hybrid` object.
+
+## Usage 
+
+Use `--help` to see utility arguments and options. 
+
+## Source Files Format
 
 The tool takes a command description in KotlinScript using DSL:
 ```kotlin
